@@ -1,3 +1,5 @@
+import javafx.application.Application
+import javafx.stage.Stage
 import map.Map
 import map.MapDisplay
 
@@ -12,8 +14,6 @@ class Main : Application() {
         mapDisplay.start(primaryStage)
     }
 }
-
-
 fun main() {
     val name = "Kotlin"
     //TIP Press <shortcut actionId="ShowIntentionActions"/> with your caret at the highlighted text
