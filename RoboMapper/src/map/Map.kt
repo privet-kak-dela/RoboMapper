@@ -12,6 +12,7 @@ class Map {
     fun initMap(width: Int, height: Int) {
         this.height = height
         this.width = width
+        map.clear()
         repeat(height) {
             map.add(MutableList(width) { 0 }) // Инициализация ячеек со значением 0 (свободное пространство)
         }
