@@ -1,26 +1,18 @@
 package map
 
-class Map {
-    private val map: MutableList<MutableList<Int>> = mutableListOf()
-    var height = 0
-        private set
-    var width = 0
-        private set
+class Map(val height: Int, val width: Int) {
 
+    private val grid: Array<BooleanArray> =
+        Array(height) { BooleanArray(width) { false } }
 
-
-    fun initMap(width: Int, height: Int) {
-        this.height = height
-        this.width = width
-        map.clear()
-        repeat(height) {
-            map.add(MutableList(width) { 0 }) // Инициализация ячеек со значением 0 (свободное пространство)
-        }
+    fun updateMap(x: Int, y: Int) {
+        if (x in 0..<width && y in 0..<height)
+            grid[y][x] = !grid[y][x]
     }
 
-    fun updateMap(x: Int, y: Int, value: Int) {
-        // Обновление значения ячейки карты
-        map[y][x] = value
+    fun updateMap(x: Int, y: Int, value: Boolean) {
+        if (x in 0..<width && y in 0..<height)
+            grid[y][x] = value
     }
 
     fun saveMap(filename: String) {
@@ -31,7 +23,10 @@ class Map {
         // Загрузка карты из файла
     }
 
-    fun getCell(x: Int, y: Int): Int {
-        return map[y][x]
-    }
+    fun getCell(x: Int, y: Int): Boolean =
+        if (x in 0..<width && y in 0..<height) {
+            grid[y][x]
+        } else {
+            false // Или бросить исключение, если выход за границы недопустим
+        }
 }
