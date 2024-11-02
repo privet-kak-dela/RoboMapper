@@ -9,7 +9,7 @@ class Main : Application() {
     override fun start(primaryStage: Stage) {
         val map = Map(20, 20) // Создаем экземпляр класса Map
 
-
+        primaryStage.isResizable = false
         val mapDisplay = MapDisplay(map)
         mapDisplay.start(primaryStage)
     }
