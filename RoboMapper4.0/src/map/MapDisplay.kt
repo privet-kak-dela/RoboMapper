@@ -1,6 +1,7 @@
 package map
 
 import javafx.application.Application
+import javafx.beans.binding.Bindings
 import javafx.scene.Scene
 import javafx.scene.canvas.Canvas
 import javafx.scene.canvas.GraphicsContext
@@ -11,15 +12,21 @@ import javafx.stage.Stage
 import kotlin.math.abs
 import kotlin.math.sign
 import javafx.scene.control.ChoiceDialog
+import javafx.scene.control.ScrollPane
+import javafx.scene.layout.Pane
+import javafx.scene.layout.StackPane
 import javafx.stage.FileChooser
 import java.io.File
+
+
 
 class MapDisplay @JvmOverloads constructor(
     private val map: Map = Map(20, 20) // Если нужно, можно создать карту по умолчанию 20x20
 ) : Application() {
 
-    private val canvasSizeD = 10.0 // Размер ячейки в пикселях
-    private val canvasSizeI = 10 // Размер ячейки в пикселях (Int)
+    private var canvasSizeD = 10.0 // Размер ячейки в пикселях
+    private var canvasSizeI = 10 // Размер ячейки в пикселях (Int)
+
 
     override fun start(primaryStage: Stage) {
         val canvas = Canvas(map.width * canvasSizeD, map.height * canvasSizeD)
@@ -58,13 +65,38 @@ class MapDisplay @JvmOverloads constructor(
             }
         }
 
-        // Создаем контейнер VBox и добавляем Canvas и кнопку
-        val root = VBox(canvas, saveButton)
+        val scrollPane = ScrollPane()
+        scrollPane.content = canvas
+        //scrollPane.isPannable = true // Включаем возможность перемещаться по карте
+
+        val root = Pane(scrollPane, saveButton)
+        scrollPane.prefWidthProperty().bind(root.widthProperty())
+        scrollPane.prefHeightProperty().bind(root.heightProperty())
 
         // Устанавливаем сцену и отображаем окно
         primaryStage.scene = Scene(root, map.width * canvasSizeD, map.height * canvasSizeD + 40)
         primaryStage.title = "Map Display"
         primaryStage.show()
+
+        // Отслеживаем изменение размеров ScrollPane и увеличиваем карту
+        scrollPane.widthProperty().addListener { _, _, newWidth ->
+            val newCols = (newWidth.toDouble() / canvasSizeD).toInt()
+            if (newCols > map.width) {
+                map.expandWidth(newCols)
+                canvas.width = newCols * canvasSizeD
+                drawMap(graphicsContext, canvas)
+            }
+        }
+
+        scrollPane.heightProperty().addListener { _, _, newHeight ->
+            val newRows = (newHeight.toDouble() / canvasSizeD).toInt()
+            if (newRows > map.height) {
+                map.expandHeight(newRows)
+                canvas.height = newRows * canvasSizeD
+                drawMap(graphicsContext, canvas)
+            }
+        }
+
 
         canvas.setOnMousePressed { event ->
             startX = event.x

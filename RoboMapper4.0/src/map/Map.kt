@@ -5,10 +5,28 @@ import javafx.scene.canvas.Canvas
 import javafx.scene.image.WritableImage
 import javax.imageio.ImageIO
 
-class Map(val height: Int, val width: Int) {
 
-    private val grid: Array<BooleanArray> =
+class Map(var height: Int, var width: Int) {
+
+    private var grid: Array<BooleanArray> =
         Array(height) { BooleanArray(width) { false } }
+
+
+    fun expandWidth(newWidth: Int) {
+        if (newWidth > width) {
+            for (y in grid.indices) {
+                grid[y] = grid[y].copyOf(newWidth)
+            }
+            width = newWidth
+        }
+    }
+
+    fun expandHeight(newHeight: Int) {
+        if (newHeight > height) {
+            grid += Array(newHeight - height) { BooleanArray(width) { false } }
+            height = newHeight
+        }
+    }
 
     fun updateMap(x: Int, y: Int) {
         if (x in 0..<width && y in 0..<height)
@@ -19,7 +37,6 @@ class Map(val height: Int, val width: Int) {
         if (x in 0..<width && y in 0..<height)
             grid[y][x] = value
     }
-
     // Метод для сохранения карты в PNG
     fun saveMapAsPng(canvas: Canvas, filePath: String) {
         val writableImage = WritableImage(canvas.width.toInt(), canvas.height.toInt())
