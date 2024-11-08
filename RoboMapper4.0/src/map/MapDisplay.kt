@@ -13,6 +13,7 @@ import kotlin.math.abs
 import kotlin.math.sign
 import javafx.scene.control.ChoiceDialog
 import javafx.scene.control.ScrollPane
+import javafx.scene.layout.HBox
 import javafx.scene.layout.Pane
 import javafx.scene.layout.StackPane
 import javafx.stage.FileChooser
@@ -90,12 +91,14 @@ class MapDisplay @JvmOverloads constructor(
                 }
             }
         }
+        val menuBar = HBox(10.0, saveButton, loadButton)
 
         val scrollPane = ScrollPane()
         scrollPane.content = canvas
         //scrollPane.isPannable = true // Включаем возможность перемещаться по карте
 
-        val root = Pane(scrollPane, saveButton)
+        val root = VBox(menuBar, scrollPane)
+        root.spacing = 10.0
         scrollPane.prefWidthProperty().bind(root.widthProperty())
         scrollPane.prefHeightProperty().bind(root.heightProperty())
 
