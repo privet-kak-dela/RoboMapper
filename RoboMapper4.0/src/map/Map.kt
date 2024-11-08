@@ -4,6 +4,10 @@ import java.io.File
 import javafx.scene.canvas.Canvas
 import javafx.scene.image.WritableImage
 import javax.imageio.ImageIO
+import javafx.scene.image.Image
+import javafx.scene.image.PixelReader
+import javafx.scene.paint.Color
+
 
 class Map(val height: Int, val width: Int) {
 
@@ -41,7 +45,29 @@ class Map(val height: Int, val width: Int) {
         File(filePath).writeText(csvData.toString())
     }
 
-    fun loadMap(filename: String) {
+    // Загрузки карты из PNG
+    fun loadMapFromPng(filePath: String) {
+        /*val file = File(filePath)
+        if (file.exists()) {
+            // Загружаем изображение
+            val image = Image(file.toURI().toString())
+            val pixelReader: PixelReader = image.pixelReader
+
+
+            for (y in 0 until height) {
+                for (x in 0 until width) {
+                    val color: Color = pixelReader.getColor(x, y)
+                    // Считаем, что черный цвет означает заполненную ячейку, а белый — пустую
+                    updateMap(x, y, color == Color.BLACK)
+                }
+            }
+        } else {
+            println("Файл не найден: $filePath")
+        }
+        */
+    }
+
+    fun loadMapFromCSV(filename: String) {
         // Загрузка карты из файла
     }
 
