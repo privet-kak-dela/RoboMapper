@@ -18,15 +18,12 @@ import javafx.scene.layout.StackPane
 import javafx.stage.FileChooser
 import java.io.File
 
-
-
 class MapDisplay @JvmOverloads constructor(
     private val map: Map = Map(20, 20) // Если нужно, можно создать карту по умолчанию 20x20
 ) : Application() {
 
-    private var canvasSizeD = 10.0 // Размер ячейки в пикселях
-    private var canvasSizeI = 10 // Размер ячейки в пикселях (Int)
-
+    private val canvasSizeD = 10.0 // Размер ячейки в пикселях
+    private val canvasSizeI = 10 // Размер ячейки в пикселях (Int)
 
     override fun start(primaryStage: Stage) {
         val canvas = Canvas(map.width * canvasSizeD, map.height * canvasSizeD)
@@ -60,6 +57,35 @@ class MapDisplay @JvmOverloads constructor(
                     when (format) {
                         "PNG" -> map.saveMapAsPng(canvas, file.path)
                         "CSV" -> map.saveMapAsCsv(file.path)
+                    }
+                }
+            }
+        }
+        // Создаем кнопку "Загрузить"
+        val loadButton = Button("Загрузить")
+        loadButton.setOnAction {
+            // Диалог выбора формата файла
+            val formats = listOf("PNG", "CSV")
+            val choiceDialog = ChoiceDialog("PNG", formats)
+            choiceDialog.title = "Выбор формата"
+            choiceDialog.headerText = "Выберите формат для загрузки карты"
+            val chosenFormat = choiceDialog.showAndWait()
+
+            chosenFormat.ifPresent { format ->
+                // Настройка диалога выбора файла
+                val fileChooser = FileChooser()
+                fileChooser.title = "Загрузить карту в формате $format"
+                fileChooser.extensionFilters.add(
+                    FileChooser.ExtensionFilter("$format Files", "*.${format.lowercase()}")
+                )
+
+                val file: File? = fileChooser.showOpenDialog(primaryStage)
+                if (file != null) {
+                    when (format) {
+                        "PNG" -> map.loadMapFromPng(file.path)  // Загружаем карту в формате PNG
+                        "CSV" -> {
+                           //надо сделать функцию для загрузки карты в формате csv
+                        }
                     }
                 }
             }
@@ -101,17 +127,25 @@ class MapDisplay @JvmOverloads constructor(
         canvas.setOnMousePressed { event ->
             startX = event.x
             startY = event.y
-            map.updateMap(event.x.toInt() / canvasSizeI, event.y.toInt() / canvasSizeI)
+            if (event.button == javafx.scene.input.MouseButton.PRIMARY) {
+                map.updateMap(event.x.toInt() / canvasSizeI, event.y.toInt() / canvasSizeI, true)
+            } else if (event.button == javafx.scene.input.MouseButton.SECONDARY) {
+                map.updateMap(event.x.toInt() / canvasSizeI, event.y.toInt() / canvasSizeI, false)
+            }
             drawMap(graphicsContext, canvas)
         }
 
         canvas.setOnMouseDragged { event ->
             graphicsContext.strokeLine(startX, startY, event.x, event.y)
+
+            val flag = (event.button == javafx.scene.input.MouseButton.PRIMARY)
+
             updateMapAlongLine(
                 startX.toInt() / canvasSizeI,
                 startY.toInt() / canvasSizeI,
                 event.x.toInt() / canvasSizeI,
-                event.y.toInt() / canvasSizeI
+                event.y.toInt() / canvasSizeI,
+                flag
             )
             startX = event.x
             startY = event.y
@@ -129,7 +163,7 @@ class MapDisplay @JvmOverloads constructor(
         }
     }
 
-    private fun updateMapAlongLine(x1: Int, y1: Int, x2: Int, y2: Int) {
+    private fun updateMapAlongLine(x1: Int, y1: Int, x2: Int, y2: Int, flag: Boolean) {
         var x = x1
         var y = y1
         val dx = abs(x2 - x1)
@@ -139,7 +173,8 @@ class MapDisplay @JvmOverloads constructor(
         var err = dx + dy
 
         while (true) {
-            map.updateMap(x, y, true)
+
+            map.updateMap(x, y, flag)
             if (x == x2 && y == y2) break
             val e2 = 2 * err
             if (e2 >= dy) {
