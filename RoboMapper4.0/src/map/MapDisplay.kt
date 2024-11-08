@@ -17,14 +17,16 @@ import javafx.scene.layout.HBox
 import javafx.scene.layout.Pane
 import javafx.scene.layout.StackPane
 import javafx.stage.FileChooser
+import robot.Robot
 import java.io.File
 
 class MapDisplay @JvmOverloads constructor(
     private val map: Map = Map(20, 20) // Если нужно, можно создать карту по умолчанию 20x20
 ) : Application() {
-
+    private val robot: Robot = Robot(map)
     private val canvasSizeD = 10.0 // Размер ячейки в пикселях
     private val canvasSizeI = 10 // Размер ячейки в пикселях (Int)
+    private var isSettingRobot = false // Флаг для режима установки робота
 
     override fun start(primaryStage: Stage) {
         val canvas = Canvas(map.width * canvasSizeD, map.height * canvasSizeD)
@@ -32,8 +34,17 @@ class MapDisplay @JvmOverloads constructor(
         var startX = 0.0
         var startY = 0.0
 
+
         // Отображение карты
         drawMap(graphicsContext, canvas)
+
+
+        // Кнопка для установки робота в любое место по клику
+        val setRobotButton = Button("Установить Робота")
+        setRobotButton.setOnAction {
+            isSettingRobot = true // Включаем режим установки робота
+        }
+
 
         // Создаем кнопку "Сохранить"
         val saveButton = Button("Сохранить")
@@ -91,7 +102,7 @@ class MapDisplay @JvmOverloads constructor(
                 }
             }
         }
-        val menuBar = HBox(10.0, saveButton, loadButton)
+        val menuBar = HBox(10.0, saveButton, loadButton, setRobotButton)
 
         val scrollPane = ScrollPane()
         scrollPane.content = canvas
@@ -130,7 +141,21 @@ class MapDisplay @JvmOverloads constructor(
         canvas.setOnMousePressed { event ->
             startX = event.x
             startY = event.y
-            if (event.button == javafx.scene.input.MouseButton.PRIMARY) {
+            if (isSettingRobot) {
+                // Определяем координаты клетки, где был клик
+
+                val x = (event.x / canvasSizeD).toInt()
+                val y = (event.y / canvasSizeD).toInt()
+                if (map.getCell(x, y))
+                    return@setOnMousePressed
+                if (x in 0 until map.width && y in 0 until map.height) {
+                    // Устанавливаем робота на выбранные координаты
+                    robot.PosX = x
+                    robot.PosY = y
+                    isSettingRobot = false // Выключаем режим установки робота
+                }
+            }
+            else if (event.button == javafx.scene.input.MouseButton.PRIMARY) {
                 map.updateMap(event.x.toInt() / canvasSizeI, event.y.toInt() / canvasSizeI, true)
             } else if (event.button == javafx.scene.input.MouseButton.SECONDARY) {
                 map.updateMap(event.x.toInt() / canvasSizeI, event.y.toInt() / canvasSizeI, false)
@@ -156,6 +181,8 @@ class MapDisplay @JvmOverloads constructor(
         }
     }
 
+
+
     private fun drawMap(graphicsContext: GraphicsContext, canvas: Canvas) {
         graphicsContext.clearRect(0.0, 0.0, canvas.width, canvas.height)
         for (y in 0..<map.height) {
@@ -163,6 +190,11 @@ class MapDisplay @JvmOverloads constructor(
                 graphicsContext.fill = if (map.getCell(x, y)) Color.BLACK else Color.WHITE
                 graphicsContext.fillRect(x * canvasSizeD, y * canvasSizeD, canvasSizeD, canvasSizeD)
             }
+        }
+        if(!isSettingRobot)
+        {
+            graphicsContext.fill = Color.RED
+            graphicsContext.fillRect(robot.PosX * canvasSizeD, robot.PosY * canvasSizeD, canvasSizeD, canvasSizeD)
         }
     }
 
