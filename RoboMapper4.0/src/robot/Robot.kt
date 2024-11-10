@@ -8,4 +8,15 @@ class Robot(map: Map)
     var PosX = 0
     var PosY = 0
 
+
+
+    public fun moveRight()
+    {}
+    public fun moveLeft()
+    {}
+    public fun moveUp()
+    {}
+    public fun moveDown()
+    {}
+
 }
