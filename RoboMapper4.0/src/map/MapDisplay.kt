@@ -13,6 +13,7 @@ import kotlin.math.sign
 import javafx.scene.control.ChoiceDialog
 import javafx.scene.control.ScrollPane
 import javafx.scene.input.MouseEvent
+import javafx.scene.input.KeyCode
 import javafx.scene.layout.HBox
 import javafx.stage.FileChooser
 import robot.Robot
@@ -62,6 +63,22 @@ class MapDisplay @JvmOverloads constructor(
         primaryStage.scene = Scene(root, map.width * canvasSizeD, map.height * canvasSizeD + 40)
         primaryStage.title = "Map Display"
         primaryStage.show()
+
+        primaryStage.scene.setOnKeyPressed { event ->
+            when (event.text) {
+//                KeyCode.UP -> robot.moveUp()
+//                KeyCode.DOWN -> robot.moveDown()
+//                KeyCode.LEFT -> robot.moveLeft()
+//                KeyCode.RIGHT -> robot.moveRight()
+                "w" -> robot.moveUp()
+                "s" -> robot.moveDown()
+                "a" -> robot.moveLeft()
+                "d" -> robot.moveRight()
+                else -> {}
+            }
+            drawMap(graphicsContext, canvas)
+        }
+
 
         // Отслеживаем изменение размеров ScrollPane и увеличиваем карту
         scrollPane.widthProperty().addListener { _, _, newWidth ->
@@ -217,8 +234,7 @@ class MapDisplay @JvmOverloads constructor(
                 graphicsContext.fillRect(x * canvasSizeD, y * canvasSizeD, canvasSizeD, canvasSizeD)
             }
         }
-        if(!isSettingRobot)
-        {
+        if (!isSettingRobot) {
             graphicsContext.fill = Color.RED
             graphicsContext.fillRect(robot.PosX * canvasSizeD, robot.PosY * canvasSizeD, canvasSizeD, canvasSizeD)
         }
