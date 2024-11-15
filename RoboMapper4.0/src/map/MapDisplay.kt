@@ -220,7 +220,8 @@ class MapDisplay @JvmOverloads constructor(
                     when (format) {
                         "PNG" -> map.loadMapFromPng(file.path)  // Загружаем карту в формате PNG
                         "CSV" -> {
-                            //надо сделать функцию для загрузки карты в формате csv
+                            map.loadMapFromCSV(file.path)
+                            drawMap(canvas.graphicsContext2D, canvas)
                         }
                     }
                 }

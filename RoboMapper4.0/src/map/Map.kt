@@ -85,7 +85,21 @@ class Map(var height: Int, var width: Int) {
     }
 
     fun loadMapFromCSV(filename: String) {
-        // Загрузка карты из файла
+        val file = File(filename)
+        var y = 0;
+        if(file.exists()){
+           file.forEachLine {line ->
+               val values = line.split(",")
+               for(i in values.indices){
+                   updateMap(i, y, values[i].toInt() == 1)
+               }
+               y++
+           }
+
+        }
+        else{
+            println("Файл не найден: $filename")
+        }
     }
 
     fun getCell(x: Int, y: Int): Boolean =
