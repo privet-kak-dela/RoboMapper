@@ -65,11 +65,13 @@ class MapDisplay @JvmOverloads constructor(
         primaryStage.show()
 
         primaryStage.scene.setOnKeyPressed { event ->
+
             when (event.code) {
                KeyCode.W -> robot.moveUp()
                KeyCode.S -> robot.moveDown()
                 KeyCode.A -> robot.moveLeft()
                 KeyCode.D -> robot.moveRight()
+
 
                 else -> {}
             }
@@ -213,7 +215,8 @@ class MapDisplay @JvmOverloads constructor(
                     when (format) {
                         "PNG" -> map.loadMapFromPng(file.path)  // Загружаем карту в формате PNG
                         "CSV" -> {
-                            //надо сделать функцию для загрузки карты в формате csv
+                            map.loadMapFromCSV(file.path)
+                            drawMap(canvas.graphicsContext2D, canvas)
                         }
                     }
                 }
@@ -231,9 +234,9 @@ class MapDisplay @JvmOverloads constructor(
                 graphicsContext.fillRect(x * canvasSizeD, y * canvasSizeD, canvasSizeD, canvasSizeD)
             }
         }
-        if (!isSettingRobot) {
+        if (!isSettingRobot && robot.PosX != null && robot.PosY != null) {
             graphicsContext.fill = Color.RED
-            graphicsContext.fillRect(robot.PosX * canvasSizeD, robot.PosY * canvasSizeD, canvasSizeD, canvasSizeD)
+            graphicsContext.fillRect(robot.PosX!! * canvasSizeD, robot.PosY!! * canvasSizeD, canvasSizeD, canvasSizeD)
         }
     }
 
