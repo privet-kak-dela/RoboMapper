@@ -13,8 +13,13 @@ class Main : Application() {
         //primaryStage.isResizable = false
         val mapDisplay = MapDisplay(map)
         mapDisplay.start(primaryStage)
+
+
+
+
     }
 }
 fun main() {
     Application.launch(Main::class.java)
+
 }

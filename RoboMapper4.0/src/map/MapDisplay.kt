@@ -36,12 +36,17 @@ class MapDisplay @JvmOverloads constructor(
         var startCoordinates = doubleArrayOf(0.0, 0.0)
 
         // Отображение карты
+
         drawMap(graphicsContext, canvas)
+
+
 
         // Кнопка для установки робота в любое место по клику
         val setRobotButton = Button("Установить Робота")
         setRobotButton.setOnAction {
-            isSettingRobot = true // Включаем режим установки робота
+            isSettingRobot = true
+            hiddenMap(graphicsContext, canvas)
+
         }
 
         // Создаем кнопку "Сохранить"
@@ -67,15 +72,14 @@ class MapDisplay @JvmOverloads constructor(
         primaryStage.scene.setOnKeyPressed { event ->
 
             when (event.code) {
-               KeyCode.W -> robot.moveUp()
-               KeyCode.S -> robot.moveDown()
+                KeyCode.W -> robot.moveUp()
+                KeyCode.S -> robot.moveDown()
                 KeyCode.A -> robot.moveLeft()
                 KeyCode.D -> robot.moveRight()
-
-
                 else -> {}
             }
-            drawMap(graphicsContext, canvas)
+            hiddenMap(graphicsContext, canvas)
+
         }
 
 
@@ -99,14 +103,16 @@ class MapDisplay @JvmOverloads constructor(
         if (isSettingRobot) {
             // Установка робота
             setRobotPosition(event)
+            hiddenMap(graphicsContext, canvas)
         }
-        else if (event.button == javafx.scene.input.MouseButton.PRIMARY) {
-            map.updateMap(event.x.toInt() / canvasSizeI, event.y.toInt() / canvasSizeI, true)
-        } else if (event.button == javafx.scene.input.MouseButton.SECONDARY) {
-            map.updateMap(event.x.toInt() / canvasSizeI, event.y.toInt() / canvasSizeI, false)
-        }
+        else {
+            if (event.button == javafx.scene.input.MouseButton.PRIMARY)
+                map.updateMap(event.x.toInt() / canvasSizeI, event.y.toInt() / canvasSizeI, true)
+            else if (event.button == javafx.scene.input.MouseButton.SECONDARY)
+                map.updateMap(event.x.toInt() / canvasSizeI, event.y.toInt() / canvasSizeI, false)
 
-        drawMap(graphicsContext, canvas)
+            drawMap(graphicsContext, canvas)
+        }
     }
 
     private fun handleMouseDragged(event: MouseEvent, graphicsContext: GraphicsContext, canvas: Canvas, startCoordinates: DoubleArray) {
@@ -239,7 +245,20 @@ class MapDisplay @JvmOverloads constructor(
             graphicsContext.fillRect(robot.PosX!! * canvasSizeD, robot.PosY!! * canvasSizeD, canvasSizeD, canvasSizeD)
         }
     }
-
+    private fun hiddenMap(graphicsContext: GraphicsContext, canvas: Canvas)
+    {
+        graphicsContext.clearRect(0.0, 0.0, canvas.width, canvas.height)
+        for (y in 0..<map.height) {
+            for (x in 0..<map.width) {
+                graphicsContext.fill =  Color.WHITE
+                graphicsContext.fillRect(x * canvasSizeD, y * canvasSizeD, canvasSizeD, canvasSizeD)
+            }
+        }
+        if (!isSettingRobot && robot.PosX != null && robot.PosY != null) {
+            graphicsContext.fill = Color.RED
+            graphicsContext.fillRect(robot.PosX!! * canvasSizeD, robot.PosY!! * canvasSizeD, canvasSizeD, canvasSizeD)
+        }
+    }
     private fun updateMapAlongLine(x1: Int, y1: Int, x2: Int, y2: Int, flag: Boolean) {
         var x = x1
         var y = y1
