@@ -65,15 +65,12 @@ class MapDisplay @JvmOverloads constructor(
         primaryStage.show()
 
         primaryStage.scene.setOnKeyPressed { event ->
-            when (event.text) {
-//                KeyCode.UP -> robot.moveUp()
-//                KeyCode.DOWN -> robot.moveDown()
-//                KeyCode.LEFT -> robot.moveLeft()
-//                KeyCode.RIGHT -> robot.moveRight()
-                "w" -> robot.moveUp()
-                "s" -> robot.moveDown()
-                "a" -> robot.moveLeft()
-                "d" -> robot.moveRight()
+            when (event.code) {
+               KeyCode.W -> robot.moveUp()
+               KeyCode.S -> robot.moveDown()
+                KeyCode.A -> robot.moveLeft()
+                KeyCode.D -> robot.moveRight()
+
                 else -> {}
             }
             drawMap(graphicsContext, canvas)
