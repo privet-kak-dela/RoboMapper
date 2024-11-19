@@ -12,6 +12,7 @@ import kotlin.math.abs
 import kotlin.math.sign
 import javafx.scene.control.ChoiceDialog
 import javafx.scene.control.ScrollPane
+import javafx.scene.control.SplitPane
 import javafx.scene.input.MouseEvent
 import javafx.scene.input.KeyCode
 import javafx.scene.layout.HBox
@@ -29,7 +30,9 @@ class MapDisplay @JvmOverloads constructor(
 
     override fun start(primaryStage: Stage) {
         val canvas = Canvas(map.width * canvasSizeD, map.height * canvasSizeD)
+        val canvas2 = Canvas(map.width * canvasSizeD, map.height * canvasSizeD)
         val graphicsContext = canvas.graphicsContext2D
+        val graphicsContext2 = canvas2.graphicsContext2D
         var startX = 0.0
         var startY = 0.0
 
@@ -38,6 +41,7 @@ class MapDisplay @JvmOverloads constructor(
         // Отображение карты
 
         drawMap(graphicsContext, canvas)
+        drawMap(graphicsContext2, canvas2)
 
 
 
@@ -45,7 +49,7 @@ class MapDisplay @JvmOverloads constructor(
         val setRobotButton = Button("Установить Робота")
         setRobotButton.setOnAction {
             isSettingRobot = true
-            hiddenMap(graphicsContext, canvas)
+            hideMap(graphicsContext, canvas)
 
         }
 
@@ -54,12 +58,19 @@ class MapDisplay @JvmOverloads constructor(
         // Создаем кнопку "Загрузить"
         val loadButton = createLoadButton(primaryStage, canvas)
 
+
         val menuBar = HBox(10.0, saveButton, loadButton, setRobotButton)
+
         val scrollPane = ScrollPane()
         scrollPane.content = canvas
-        //scrollPane.isPannable = true // Включаем возможность перемещаться по карте
 
-        val root = VBox(menuBar, scrollPane)
+        val scrollPane2 = ScrollPane()
+        scrollPane2.content = canvas2
+
+        val splitPane = SplitPane()
+        splitPane.items.addAll(scrollPane, scrollPane2)
+        splitPane.setDividerPositions(0.5)
+        val root = VBox(menuBar, splitPane)
         root.spacing = 10.0
         scrollPane.prefWidthProperty().bind(root.widthProperty())
         scrollPane.prefHeightProperty().bind(root.heightProperty())
@@ -78,8 +89,6 @@ class MapDisplay @JvmOverloads constructor(
                 KeyCode.D -> robot.moveRight()
                 else -> {}
             }
-            hiddenMap(graphicsContext, canvas)
-
         }
 
 
@@ -103,7 +112,7 @@ class MapDisplay @JvmOverloads constructor(
         if (isSettingRobot) {
             // Установка робота
             setRobotPosition(event)
-            hiddenMap(graphicsContext, canvas)
+            hideMap(graphicsContext, canvas)
         }
         else {
             if (event.button == javafx.scene.input.MouseButton.PRIMARY)
@@ -245,7 +254,7 @@ class MapDisplay @JvmOverloads constructor(
             graphicsContext.fillRect(robot.PosX!! * canvasSizeD, robot.PosY!! * canvasSizeD, canvasSizeD, canvasSizeD)
         }
     }
-    private fun hiddenMap(graphicsContext: GraphicsContext, canvas: Canvas)
+    private fun hideMap(graphicsContext: GraphicsContext, canvas: Canvas)
     {
         graphicsContext.clearRect(0.0, 0.0, canvas.width, canvas.height)
         for (y in 0..<map.height) {
