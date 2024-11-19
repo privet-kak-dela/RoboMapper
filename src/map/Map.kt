@@ -12,8 +12,8 @@ import javafx.scene.paint.Color
 
 class Map(var height: Int, var width: Int) {
 
-    private var grid: Array<BooleanArray> =
-        Array(height) { BooleanArray(width) { false } }
+    private var grid: Array<IntArray> =
+        Array(height) { IntArray(width) { 0 } }
 
 
     fun expandWidth(newWidth: Int) {
@@ -27,17 +27,17 @@ class Map(var height: Int, var width: Int) {
 
     fun expandHeight(newHeight: Int) {
         if (newHeight > height) {
-            grid += Array(newHeight - height) { BooleanArray(width) { false } }
+            grid += Array(newHeight - height) { IntArray(width) { 0 } }
             height = newHeight
         }
     }
 
-    fun updateMap(x: Int, y: Int) {
-        if (x in 0..<width && y in 0..<height)
-            grid[y][x] = !grid[y][x]
-    }
+    //fun updateMap(x: Int, y: Int) {
+    //    if (x in 0..<width && y in 0..<height)
+    //        grid[y][x] = !grid[y][x]
+    //}
 
-    fun updateMap(x: Int, y: Int, value: Boolean) {
+    fun updateMap(x: Int, y: Int, value: Int) {
         if (x in 0..<width && y in 0..<height)
             grid[y][x] = value
     }
@@ -54,7 +54,7 @@ class Map(var height: Int, var width: Int) {
         val csvData = StringBuilder()
         for (y in 0 until height) {
             for (x in 0 until width) {
-                csvData.append(if (getCell(x, y)) "1" else "0") // Преобразуем ячейку в "1" или "0"
+                csvData.append(if (getCell(x, y) != 0)  "1" else "0") // Преобразуем ячейку в "1" или "0"
                 if (x < width - 1) csvData.append(",")
             }
             csvData.append("\n")
@@ -91,7 +91,7 @@ class Map(var height: Int, var width: Int) {
            file.forEachLine {line ->
                val values = line.split(",")
                for(i in values.indices){
-                   updateMap(i, y, values[i].toInt() == 1)
+                   updateMap(i, y, values[i].toInt())
                }
                y++
            }
@@ -102,10 +102,10 @@ class Map(var height: Int, var width: Int) {
         }
     }
 
-    fun getCell(x: Int, y: Int): Boolean =
+    fun getCell(x: Int, y: Int): Int =
         if (x in 0..<width && y in 0..<height) {
             grid[y][x]
         } else {
-            false // Или бросить исключение, если выход за границы недопустим
+            -1 // Или бросить исключение, если выход за границы недопустим
         }
 }
