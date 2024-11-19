@@ -12,6 +12,7 @@ import kotlin.math.abs
 import kotlin.math.sign
 import javafx.scene.control.ChoiceDialog
 import javafx.scene.control.ScrollPane
+import javafx.scene.control.SplitPane
 import javafx.scene.input.MouseEvent
 import javafx.scene.input.KeyCode
 import javafx.scene.layout.HBox
@@ -29,15 +30,16 @@ class MapDisplay @JvmOverloads constructor(
 
     override fun start(primaryStage: Stage) {
         val canvas = Canvas(map.width * canvasSizeD, map.height * canvasSizeD)
+        val canvas2 = Canvas(map.width * canvasSizeD, map.height * canvasSizeD)
         val graphicsContext = canvas.graphicsContext2D
-        var startX = 0.0
-        var startY = 0.0
+        val graphicsContext2 = canvas2.graphicsContext2D
 
         var startCoordinates = doubleArrayOf(0.0, 0.0)
 
         // Отображение карты
 
         drawMap(graphicsContext, canvas)
+        hideMap(graphicsContext2, canvas2)
 
 
 
@@ -45,7 +47,7 @@ class MapDisplay @JvmOverloads constructor(
         val setRobotButton = Button("Установить Робота")
         setRobotButton.setOnAction {
             isSettingRobot = true
-            hiddenMap(graphicsContext, canvas)
+            //hideMap(graphicsContext, canvas)
 
         }
 
@@ -54,12 +56,23 @@ class MapDisplay @JvmOverloads constructor(
         // Создаем кнопку "Загрузить"
         val loadButton = createLoadButton(primaryStage, canvas)
 
+
         val menuBar = HBox(10.0, saveButton, loadButton, setRobotButton)
+
         val scrollPane = ScrollPane()
         scrollPane.content = canvas
-        //scrollPane.isPannable = true // Включаем возможность перемещаться по карте
 
-        val root = VBox(menuBar, scrollPane)
+        val scrollPane2 = ScrollPane()
+        scrollPane2.content = canvas2
+
+        val splitPane = SplitPane()
+        splitPane.items.addAll(scrollPane, scrollPane2)
+        splitPane.setDividerPositions(0.5)
+        splitPane.dividers[0].positionProperty().addListener { observable, _, _ ->
+            splitPane.setDividerPositions(0.5)
+        }
+
+        val root = VBox(menuBar, splitPane)
         root.spacing = 10.0
         scrollPane.prefWidthProperty().bind(root.widthProperty())
         scrollPane.prefHeightProperty().bind(root.heightProperty())
@@ -68,6 +81,7 @@ class MapDisplay @JvmOverloads constructor(
         primaryStage.scene = Scene(root, map.width * canvasSizeD, map.height * canvasSizeD + 40)
         primaryStage.title = "Map Display"
         primaryStage.show()
+
 
         primaryStage.scene.setOnKeyPressed { event ->
 
@@ -78,21 +92,23 @@ class MapDisplay @JvmOverloads constructor(
                 KeyCode.D -> robot.moveRight()
                 else -> {}
             }
-            hiddenMap(graphicsContext, canvas)
-
+            robot.radar()
+            drawMap(graphicsContext, canvas)
+            hideMap(graphicsContext2, canvas2)
         }
 
 
         // Отслеживаем изменение размеров ScrollPane и увеличиваем карту
         scrollPane.widthProperty().addListener { _, _, newWidth ->
-            adjustMapWidth(graphicsContext, canvas, newWidth.toDouble())
+            adjustMapWidth(graphicsContext, graphicsContext2, canvas, canvas2, newWidth.toDouble())
         }
         scrollPane.heightProperty().addListener { _, _, newHeight ->
             adjustMapHeight(graphicsContext, canvas, newHeight.toDouble())
         }
 
         canvas.setOnMousePressed { event -> handleMousePressed(event, graphicsContext, canvas, startCoordinates) }
-        canvas.setOnMouseDragged { event -> handleMouseDragged(event, graphicsContext, canvas, startCoordinates) }
+        canvas2.setOnMousePressed { event -> handleMousePressedSetRobotPosition(event, graphicsContext2, canvas2, startCoordinates) }
+        canvas.setOnMouseDragged { event -> handleMouseDragged(event, graphicsContext, graphicsContext2, canvas, canvas2, startCoordinates) }
     }
 
 
@@ -100,23 +116,32 @@ class MapDisplay @JvmOverloads constructor(
         startCoordinates[0] = event.x
         startCoordinates[1] = event.y
 
+
+        if (!isSettingRobot && event.button == javafx.scene.input.MouseButton.PRIMARY)
+            map.updateMap(event.x.toInt() / canvasSizeI, event.y.toInt() / canvasSizeI, 1)
+        else if (!isSettingRobot && event.button == javafx.scene.input.MouseButton.SECONDARY)
+            map.updateMap(event.x.toInt() / canvasSizeI, event.y.toInt() / canvasSizeI, 0)
+
+        drawMap(graphicsContext, canvas)
+
+
+    }
+    private fun handleMousePressedSetRobotPosition(event: MouseEvent, graphicsContext: GraphicsContext, canvas: Canvas, startCoordinates: DoubleArray) {
+        startCoordinates[0] = event.x
+        startCoordinates[1] = event.y
+
         if (isSettingRobot) {
             // Установка робота
             setRobotPosition(event)
-            hiddenMap(graphicsContext, canvas)
+            robot.radar()
+            hideMap(graphicsContext, canvas)
         }
-        else {
-            if (event.button == javafx.scene.input.MouseButton.PRIMARY)
-                map.updateMap(event.x.toInt() / canvasSizeI, event.y.toInt() / canvasSizeI, true)
-            else if (event.button == javafx.scene.input.MouseButton.SECONDARY)
-                map.updateMap(event.x.toInt() / canvasSizeI, event.y.toInt() / canvasSizeI, false)
 
-            drawMap(graphicsContext, canvas)
-        }
     }
 
-    private fun handleMouseDragged(event: MouseEvent, graphicsContext: GraphicsContext, canvas: Canvas, startCoordinates: DoubleArray) {
-        val flag = event.button == javafx.scene.input.MouseButton.PRIMARY
+
+    private fun handleMouseDragged(event: MouseEvent, graphicsContext: GraphicsContext,graphicsContext2: GraphicsContext, canvas: Canvas,canvas2: Canvas, startCoordinates: DoubleArray) {
+        val flag = if (event.button == javafx.scene.input.MouseButton.PRIMARY) 1 else 0
 
         // Обновляем карту по линии между предыдущей и текущей точками
         updateMapAlongLine(
@@ -132,13 +157,14 @@ class MapDisplay @JvmOverloads constructor(
         startCoordinates[1] = event.y
 
         drawMap(graphicsContext, canvas)
+        hideMap(graphicsContext2, canvas2)
     }
 
 
     private fun setRobotPosition(event: MouseEvent) {
         val x = (event.x / canvasSizeD).toInt()
         val y = (event.y / canvasSizeD).toInt()
-        if (map.getCell(x, y)) return
+        if (map.getCell(x, y) != 0 ) return
         if (x in 0 until map.width && y in 0 until map.height) {
             robot.PosX = x
             robot.PosY = y
@@ -147,12 +173,13 @@ class MapDisplay @JvmOverloads constructor(
     }
 
 
-    private fun adjustMapWidth(graphicsContext: GraphicsContext, canvas: Canvas, newWidth: Double) {
+    private fun adjustMapWidth(graphicsContext: GraphicsContext,graphicsContext2: GraphicsContext, canvas: Canvas, canvas2: Canvas, newWidth: Double) {
         val newCols = (newWidth / canvasSizeD).toInt()
         if (newCols > map.width) {
             map.expandWidth(newCols)
             canvas.width = newCols * canvasSizeD
             drawMap(graphicsContext, canvas)
+            hideMap(graphicsContext2, canvas2)
         }
     }
 
@@ -236,21 +263,17 @@ class MapDisplay @JvmOverloads constructor(
         graphicsContext.clearRect(0.0, 0.0, canvas.width, canvas.height)
         for (y in 0..<map.height) {
             for (x in 0..<map.width) {
-                graphicsContext.fill = if (map.getCell(x, y)) Color.BLACK else Color.WHITE
+                graphicsContext.fill = if (map.getCell(x, y) != 0) Color.BLACK else Color.WHITE
                 graphicsContext.fillRect(x * canvasSizeD, y * canvasSizeD, canvasSizeD, canvasSizeD)
             }
         }
-        if (!isSettingRobot && robot.PosX != null && robot.PosY != null) {
-            graphicsContext.fill = Color.RED
-            graphicsContext.fillRect(robot.PosX!! * canvasSizeD, robot.PosY!! * canvasSizeD, canvasSizeD, canvasSizeD)
-        }
     }
-    private fun hiddenMap(graphicsContext: GraphicsContext, canvas: Canvas)
+    private fun hideMap(graphicsContext: GraphicsContext, canvas: Canvas)
     {
         graphicsContext.clearRect(0.0, 0.0, canvas.width, canvas.height)
         for (y in 0..<map.height) {
             for (x in 0..<map.width) {
-                graphicsContext.fill =  Color.WHITE
+                graphicsContext.fill =  if (map.getCell(x, y) != 2) Color.WHITE else Color.BLACK
                 graphicsContext.fillRect(x * canvasSizeD, y * canvasSizeD, canvasSizeD, canvasSizeD)
             }
         }
@@ -259,7 +282,8 @@ class MapDisplay @JvmOverloads constructor(
             graphicsContext.fillRect(robot.PosX!! * canvasSizeD, robot.PosY!! * canvasSizeD, canvasSizeD, canvasSizeD)
         }
     }
-    private fun updateMapAlongLine(x1: Int, y1: Int, x2: Int, y2: Int, flag: Boolean) {
+
+    private fun updateMapAlongLine(x1: Int, y1: Int, x2: Int, y2: Int, flag: Int) {
         var x = x1
         var y = y1
         val dx = abs(x2 - x1)
