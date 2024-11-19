@@ -33,8 +33,6 @@ class MapDisplay @JvmOverloads constructor(
         val canvas2 = Canvas(map.width * canvasSizeD, map.height * canvasSizeD)
         val graphicsContext = canvas.graphicsContext2D
         val graphicsContext2 = canvas2.graphicsContext2D
-        var startX = 0.0
-        var startY = 0.0
 
         var startCoordinates = doubleArrayOf(0.0, 0.0)
 
@@ -49,7 +47,7 @@ class MapDisplay @JvmOverloads constructor(
         val setRobotButton = Button("Установить Робота")
         setRobotButton.setOnAction {
             isSettingRobot = true
-            hideMap(graphicsContext, canvas)
+            //hideMap(graphicsContext, canvas)
 
         }
 
@@ -70,6 +68,12 @@ class MapDisplay @JvmOverloads constructor(
         val splitPane = SplitPane()
         splitPane.items.addAll(scrollPane, scrollPane2)
         splitPane.setDividerPositions(0.5)
+        splitPane.dividers[0].positionProperty().addListener { observable, _, _ ->
+            splitPane.setDividerPositions(0.5)
+        }
+
+
+
         val root = VBox(menuBar, splitPane)
         root.spacing = 10.0
         scrollPane.prefWidthProperty().bind(root.widthProperty())
@@ -80,6 +84,7 @@ class MapDisplay @JvmOverloads constructor(
         primaryStage.title = "Map Display"
         primaryStage.show()
 
+
         primaryStage.scene.setOnKeyPressed { event ->
 
             when (event.code) {
@@ -89,6 +94,7 @@ class MapDisplay @JvmOverloads constructor(
                 KeyCode.D -> robot.moveRight()
                 else -> {}
             }
+            drawMap(graphicsContext, canvas)
         }
 
 
