@@ -250,7 +250,10 @@ class MapDisplay @JvmOverloads constructor(
                 val file: File? = fileChooser.showOpenDialog(primaryStage)
                 if (file != null) {
                     when (format) {
-                        "PNG" -> map.loadMapFromPng(file.path)  // Загружаем карту в формате PNG
+                        "PNG" ->{
+                            map.loadMapFromPng(file.path)
+                            drawMap(canvas.graphicsContext2D, canvas)
+                        }  // Загружаем карту в формате PNG
                         "CSV" -> {
                             map.loadMapFromCSV(file.path)
                             drawMap(canvas.graphicsContext2D, canvas)
