@@ -15,7 +15,29 @@ class Map(var height: Int, var width: Int) {
     private var grid: Array<IntArray> =
         Array(height) { IntArray(width) { 0 } }
 
+    fun countOnes(): Int {
+        var count = 0
+        for (i in grid.indices) { // Проходим по строкам
+            for (j in grid[i].indices) { // Проходим по столбцам
+                if (grid[i][j] == 1) { // Проверяем, является ли элемент единицей
+                    count++
+                }
+            }
+        }
+        return count
+    }
 
+    fun countTwos(): Int {
+        var count = 0
+        for (i in grid.indices) { // Проходим по строкам
+            for (j in grid[i].indices) { // Проходим по столбцам
+                if (grid[i][j] == 2) { // Проверяем, является ли элемент единицей
+                    count++
+                }
+            }
+        }
+        return count
+    }
     fun expandWidth(newWidth: Int) {
         if (newWidth > width) {
             for (y in grid.indices) {
