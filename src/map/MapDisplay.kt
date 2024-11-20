@@ -1,24 +1,24 @@
 package map
 
 import javafx.application.Application
+import javafx.beans.property.SimpleStringProperty
 import javafx.scene.Scene
 import javafx.scene.canvas.Canvas
 import javafx.scene.canvas.GraphicsContext
-import javafx.scene.control.Button
+import javafx.scene.control.*
+import javafx.scene.input.KeyCode
+import javafx.scene.input.MouseEvent
+import javafx.scene.layout.HBox
 import javafx.scene.layout.VBox
 import javafx.scene.paint.Color
-import javafx.stage.Stage
-import kotlin.math.abs
-import kotlin.math.sign
-import javafx.scene.control.ChoiceDialog
-import javafx.scene.control.ScrollPane
-import javafx.scene.control.SplitPane
-import javafx.scene.input.MouseEvent
-import javafx.scene.input.KeyCode
-import javafx.scene.layout.HBox
+import javafx.scene.text.Text
 import javafx.stage.FileChooser
+import javafx.stage.Stage
 import robot.Robot
 import java.io.File
+import kotlin.math.abs
+import kotlin.math.sign
+
 
 class MapDisplay @JvmOverloads constructor(
     private val map: Map = Map(20, 20) // Если нужно, можно создать карту по умолчанию 20x20
@@ -27,7 +27,7 @@ class MapDisplay @JvmOverloads constructor(
     private val canvasSizeD = 10.0 // Размер ячейки в пикселях
     private val canvasSizeI = 10 // Размер ячейки в пикселях (Int)
     private var isSettingRobot = false // Флаг для режима установки робота
-
+    private val dynamicText = SimpleStringProperty("0")
     override fun start(primaryStage: Stage) {
         val canvas = Canvas(map.width * canvasSizeD, map.height * canvasSizeD)
         val canvas2 = Canvas(map.width * canvasSizeD, map.height * canvasSizeD)
@@ -56,8 +56,9 @@ class MapDisplay @JvmOverloads constructor(
         // Создаем кнопку "Загрузить"
         val loadButton = createLoadButton(primaryStage, canvas)
 
+        var exploreText = createExploreText(primaryStage, canvas)
 
-        val menuBar = HBox(10.0, saveButton, loadButton, setRobotButton)
+        val menuBar = HBox(10.0, saveButton, loadButton, setRobotButton, exploreText)
 
         val scrollPane = ScrollPane()
         scrollPane.content = canvas
@@ -95,7 +96,9 @@ class MapDisplay @JvmOverloads constructor(
             robot.radar()
             drawMap(graphicsContext, canvas)
             hideMap(graphicsContext2, canvas2)
+            dynamicText.set(countPercentOfExploredCells())
         }
+
 
 
         // Отслеживаем изменение размеров ScrollPane и увеличиваем карту
@@ -135,6 +138,7 @@ class MapDisplay @JvmOverloads constructor(
             setRobotPosition(event)
             robot.radar()
             hideMap(graphicsContext, canvas)
+            dynamicText.set(countPercentOfExploredCells())
         }
 
     }
@@ -246,7 +250,10 @@ class MapDisplay @JvmOverloads constructor(
                 val file: File? = fileChooser.showOpenDialog(primaryStage)
                 if (file != null) {
                     when (format) {
-                        "PNG" -> map.loadMapFromPng(file.path)  // Загружаем карту в формате PNG
+                        "PNG" ->{
+                            map.loadMapFromPng(file.path)
+                            drawMap(canvas.graphicsContext2D, canvas)
+                        }  // Загружаем карту в формате PNG
                         "CSV" -> {
                             map.loadMapFromCSV(file.path)
                             drawMap(canvas.graphicsContext2D, canvas)
@@ -306,5 +313,15 @@ class MapDisplay @JvmOverloads constructor(
                 y += sy
             }
         }
+    }
+
+    private fun createExploreText(primaryStage: Stage, canvas: Canvas) : Label{
+        var exploreText = Label();
+        exploreText.textProperty().bind(dynamicText)
+        return exploreText
+    }
+
+    private fun countPercentOfExploredCells() : String{
+        return String.format("%.2f",map.countTwos() / (map.countOnes() + map.countTwos()).toDouble() * 100)
     }
 }

@@ -7,7 +7,7 @@ import javax.imageio.ImageIO
 import javafx.scene.image.Image
 import javafx.scene.image.PixelReader
 import javafx.scene.paint.Color
-
+import javax.swing.plaf.synth.ColorType
 
 
 class Map(var height: Int, var width: Int) {
@@ -15,7 +15,29 @@ class Map(var height: Int, var width: Int) {
     private var grid: Array<IntArray> =
         Array(height) { IntArray(width) { 0 } }
 
+    fun countOnes(): Int {
+        var count = 0
+        for (i in grid.indices) { // Проходим по строкам
+            for (j in grid[i].indices) { // Проходим по столбцам
+                if (grid[i][j] == 1) { // Проверяем, является ли элемент единицей
+                    count++
+                }
+            }
+        }
+        return count
+    }
 
+    fun countTwos(): Int {
+        var count = 0
+        for (i in grid.indices) { // Проходим по строкам
+            for (j in grid[i].indices) { // Проходим по столбцам
+                if (grid[i][j] == 2) { // Проверяем, является ли элемент двойкой
+                    count++
+                }
+            }
+        }
+        return count
+    }
     fun expandWidth(newWidth: Int) {
         if (newWidth > width) {
             for (y in grid.indices) {
@@ -64,24 +86,24 @@ class Map(var height: Int, var width: Int) {
 
     // Загрузки карты из PNG
     fun loadMapFromPng(filePath: String) {
-        /*val file = File(filePath)
+        val file = File(filePath)
         if (file.exists()) {
             // Загружаем изображение
             val image = Image(file.toURI().toString())
             val pixelReader: PixelReader = image.pixelReader
-
-
             for (y in 0 until height) {
                 for (x in 0 until width) {
-                    val color: Color = pixelReader.getColor(x, y)
-                    // Считаем, что черный цвет означает заполненную ячейку, а белый — пустую
-                    updateMap(x, y, color == Color.BLACK)
+                    val color: Color = pixelReader.getColor(x*10, y*10)
+                    println(color)
+                    if(color.red == 1.0)
+                        continue
+                    updateMap(x, y, 1)
                 }
             }
+            println(grid)
         } else {
             println("Файл не найден: $filePath")
         }
-        */
     }
 
     fun loadMapFromCSV(filename: String) {
