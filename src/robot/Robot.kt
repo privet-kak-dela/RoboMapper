@@ -43,7 +43,6 @@ class Robot(private val map: Map)
 
         for (i in 1 .. apparentDistance )
         {
-
             if(flagLeft && map.getCell(PosX!!.minus(i), PosY!!) != 0)
             {
                 map.updateMap(PosX!!.minus(i), PosY!!, 2)

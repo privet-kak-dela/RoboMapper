@@ -47,6 +47,16 @@ class Map(var height: Int, var width: Int) {
         }
     }
 
+    //Очистка карты(обнулить матрицу)
+    fun clearAll() {
+
+    }
+
+    //Очистка правой части(поставить вместо 2 единички)
+    fun clearScanningPart() {
+
+    }
+
     fun expandHeight(newHeight: Int) {
         if (newHeight > height) {
             grid += Array(newHeight - height) { IntArray(width) { 0 } }
