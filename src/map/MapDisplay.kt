@@ -11,7 +11,6 @@ import javafx.scene.input.MouseEvent
 import javafx.scene.layout.HBox
 import javafx.scene.layout.VBox
 import javafx.scene.paint.Color
-import javafx.scene.text.Text
 import javafx.stage.FileChooser
 import javafx.stage.Stage
 import robot.Robot
@@ -28,9 +27,13 @@ class MapDisplay @JvmOverloads constructor(
     private val canvasSizeI = 10 // Размер ячейки в пикселях (Int)
     private var isSettingRobot = false // Флаг для режима установки робота
     private val dynamicText = SimpleStringProperty("0")
+    companion object {
+        var canvas = Canvas()
+        var canvas2 = Canvas()
+    }
     override fun start(primaryStage: Stage) {
-        val canvas = Canvas(map.width * canvasSizeD, map.height * canvasSizeD)
-        val canvas2 = Canvas(map.width * canvasSizeD, map.height * canvasSizeD)
+        canvas = Canvas(map.width * canvasSizeD, map.height * canvasSizeD)
+        canvas2 = Canvas(map.width * canvasSizeD, map.height * canvasSizeD)
         val graphicsContext = canvas.graphicsContext2D
         val graphicsContext2 = canvas2.graphicsContext2D
 
@@ -82,7 +85,6 @@ class MapDisplay @JvmOverloads constructor(
         primaryStage.scene = Scene(root, map.width * canvasSizeD, map.height * canvasSizeD + 40)
         primaryStage.title = "Map Display"
         primaryStage.show()
-
 
         primaryStage.scene.setOnKeyPressed { event ->
 
@@ -219,7 +221,7 @@ class MapDisplay @JvmOverloads constructor(
                 val file: File? = fileChooser.showSaveDialog(primaryStage)
                 if (file != null) {
                     when (format) {
-                        "PNG" -> map.saveMapAsPng(canvas, file.path)
+                        "PNG" -> map.saveMapAsPng(file.path)
                         "CSV" -> map.saveMapAsCsv(file.path)
                     }
                 }
@@ -316,7 +318,7 @@ class MapDisplay @JvmOverloads constructor(
     }
 
     private fun createExploreText(primaryStage: Stage, canvas: Canvas) : Label{
-        var exploreText = Label();
+        var exploreText = Label()
         exploreText.textProperty().bind(dynamicText)
         return exploreText
     }
