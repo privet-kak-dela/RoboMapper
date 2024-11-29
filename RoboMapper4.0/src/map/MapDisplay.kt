@@ -13,6 +13,7 @@ import kotlin.math.abs
 import kotlin.math.sign
 import javafx.scene.control.ChoiceDialog
 import javafx.scene.control.ScrollPane
+import javafx.scene.control.ToggleButton
 import javafx.scene.layout.HBox
 import javafx.scene.layout.Pane
 import javafx.scene.layout.StackPane
@@ -21,12 +22,13 @@ import robot.Robot
 import java.io.File
 
 class MapDisplay @JvmOverloads constructor(
-    private val map: Map = Map(20, 20) // Если нужно, можно создать карту по умолчанию 20x20
+    private val map: map.Map = Map(20, 20) // Если нужно, можно создать карту по умолчанию 20x20
 ) : Application() {
     private val robot: Robot = Robot(map)
     private val canvasSizeD = 10.0 // Размер ячейки в пикселях
     private val canvasSizeI = 10 // Размер ячейки в пикселях (Int)
     private var isSettingRobot = false // Флаг для режима установки робота
+    private var isEditing = false // Флаг для режима редактирования карты
 
     override fun start(primaryStage: Stage) {
         val canvas = Canvas(map.width * canvasSizeD, map.height * canvasSizeD)
@@ -96,13 +98,29 @@ class MapDisplay @JvmOverloads constructor(
                     when (format) {
                         "PNG" -> map.loadMapFromPng(file.path)  // Загружаем карту в формате PNG
                         "CSV" -> {
-                           //надо сделать функцию для загрузки карты в формате csv
+                            //надо сделать функцию для загрузки карты в формате csv
                         }
                     }
                 }
             }
         }
-        val menuBar = HBox(10.0, saveButton, loadButton, setRobotButton)
+        // Кнопка "Редактировать"
+        val editButton = ToggleButton("Редактировать")
+        editButton.setOnAction {
+            isEditing = editButton.isSelected
+            editButton.text = if (isEditing) "Режим редактирования включен" else "Редактировать"
+            canvas.isDisable = !isEditing // Отключаем/включаем взаимодействие с картой
+        }
+
+        // Кнопка "Подтвердить"
+        val confirmButton = Button("Подтвердить")
+        confirmButton.setOnAction {
+            isEditing = false
+            editButton.isSelected = false
+            editButton.text = "Редактировать"
+            canvas.isDisable = true // Полностью отключаем редактирование карты
+        }
+        val menuBar = HBox(10.0, saveButton, loadButton, setRobotButton, editButton, confirmButton)
 
         val scrollPane = ScrollPane()
         scrollPane.content = canvas
@@ -139,9 +157,10 @@ class MapDisplay @JvmOverloads constructor(
 
 
         canvas.setOnMousePressed { event ->
-            startX = event.x
-            startY = event.y
             if (isSettingRobot) {
+                startX = event.x
+                startY = event.y
+
                 // Определяем координаты клетки, где был клик
 
                 val x = (event.x / canvasSizeD).toInt()
@@ -164,20 +183,17 @@ class MapDisplay @JvmOverloads constructor(
         }
 
         canvas.setOnMouseDragged { event ->
-            graphicsContext.strokeLine(startX, startY, event.x, event.y)
+            if (isEditing) {
+                val x1 = startX.toInt() / canvasSizeI
+                val y1 = startY.toInt() / canvasSizeI
+                val x2 = event.x.toInt() / canvasSizeI
+                val y2 = event.y.toInt() / canvasSizeI
+                updateMapAlongLine(x1, y1, x2, y2, flag = true)
+                startX = event.x
+                startY = event.y
+                drawMap(graphicsContext, canvas)
+            }
 
-            val flag = (event.button == javafx.scene.input.MouseButton.PRIMARY)
-
-            updateMapAlongLine(
-                startX.toInt() / canvasSizeI,
-                startY.toInt() / canvasSizeI,
-                event.x.toInt() / canvasSizeI,
-                event.y.toInt() / canvasSizeI,
-                flag
-            )
-            startX = event.x
-            startY = event.y
-            drawMap(graphicsContext, canvas)
         }
     }
 
@@ -223,3 +239,4 @@ class MapDisplay @JvmOverloads constructor(
         }
     }
 }
+
