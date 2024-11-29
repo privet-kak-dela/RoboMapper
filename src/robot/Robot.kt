@@ -1,9 +1,15 @@
 package robot
 
+import javafx.scene.canvas.GraphicsContext
+import javafx.scene.paint.Color
+import jdk.nashorn.internal.runtime.regexp.joni.Config.log
 import map.Map
 
 class Robot(private val map: Map)
 {
+    //конструктор для станции
+    constructor(map: Map, x: Int, y: Int) : this(map)
+
     //Позиция робота(по умолчанию 0,0)
     var PosX: Int? = null
     var PosY: Int? = null
@@ -66,6 +72,25 @@ class Robot(private val map: Map)
             }
         }
 
+    }
+
+
+    //тоже от себя
+
+    // Метод для следования робота
+    fun follow(other: Robot) {
+        PosX = other.PosX
+        PosY = other.PosY
+    }
+
+    // Метод для отрисовки робота на карте
+    fun drawRobot(gc: GraphicsContext) {
+        if (PosX != null && PosY != null) {
+            gc.fill = Color.RED
+            gc.fillRect(PosX!! * 10.0, PosY!! * 10.0, 10.0, 10.0)
+        } else {
+            println("Robot position is not initialized. Cannot draw.") // Или другое подходящее действие
+        }
     }
 
 }
