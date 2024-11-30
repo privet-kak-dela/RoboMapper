@@ -11,7 +11,6 @@ import javafx.scene.input.MouseEvent
 import javafx.scene.layout.HBox
 import javafx.scene.layout.VBox
 import javafx.scene.paint.Color
-import javafx.scene.text.Text
 import javafx.stage.FileChooser
 import javafx.stage.Stage
 import robot.Robot
@@ -27,6 +26,7 @@ class MapDisplay @JvmOverloads constructor(
     private val canvasSizeD = 10.0 // Размер ячейки в пикселях
     private val canvasSizeI = 10 // Размер ячейки в пикселях (Int)
     private var isSettingRobot = false // Флаг для режима установки робота
+    private var isEditing = false // Флаг для режима редактирования карты
     private val dynamicText = SimpleStringProperty("0")
     companion object {
         var canvas = Canvas()
@@ -41,17 +41,11 @@ class MapDisplay @JvmOverloads constructor(
         var startCoordinates = doubleArrayOf(0.0, 0.0)
 
         // Отображение карты
-        drawMap(graphicsContext, drawingPart)
-        hideMap(graphicsContext2, scanningPart)
 
         drawMap(graphicsContext, canvas)
         hideMap(graphicsContext2, canvas2)
 
-        //Кнопка подтверждения
-        //val submitButton = createSubmitButton(primaryStage, canvas)
 
-        //Кнопка редактирования карты
-        //val editButton = createEditButton(primaryStage, canvas)
 
         // Кнопка для установки робота в любое место по клику
         val setRobotButton = Button("Установить Робота")
@@ -65,10 +59,26 @@ class MapDisplay @JvmOverloads constructor(
         val saveButton = createSaveButton(primaryStage, drawingPart)
         // Создаем кнопку "Загрузить"
         val loadButton = createLoadButton(primaryStage, drawingPart)
+        val loadButton = createLoadButton(primaryStage, canvas)
+        // Кнопка "Редактировать"
+        val editButton = ToggleButton("Редактировать")
+        editButton.setOnAction {
+            isEditing = editButton.isSelected
+            editButton.text = if (isEditing) "Режим редактирования включен" else "Редактировать"
+            canvas.isDisable = !isEditing // Отключаем/включаем взаимодействие с картой
+        }
+        // Кнопка "Подтвердить"
+        val confirmButton = Button("Подтвердить")
+        confirmButton.setOnAction {
+            isEditing = false
+            editButton.isSelected = false
+            editButton.text = "Редактировать"
+            canvas.isDisable = true // Полностью отключаем редактирование карты
+        }
 
         var exploreText = createExploreText(primaryStage, drawingPart)
 
-        val menuBar = HBox(10.0, saveButton, loadButton, setRobotButton, exploreText)
+        val menuBar = HBox(10.0, saveButton, loadButton, setRobotButton,editButton, confirmButton, exploreText)
 
         val scrollPane = ScrollPane()
         scrollPane.content = drawingPart
@@ -93,9 +103,8 @@ class MapDisplay @JvmOverloads constructor(
         primaryStage.title = "Map Display"
         primaryStage.show()
 
-
         primaryStage.scene.setOnKeyPressed { event ->
-            //сделать проверку, что робот установлен
+
             when (event.code) {
                 KeyCode.W -> robot.moveUp()
                 KeyCode.S -> robot.moveDown()
@@ -146,12 +155,12 @@ class MapDisplay @JvmOverloads constructor(
         startCoordinates[0] = event.x
         startCoordinates[1] = event.y
 
-
-        if (!isSettingRobot && event.button == javafx.scene.input.MouseButton.PRIMARY)
-            map.updateMap(event.x.toInt() / canvasSizeI, event.y.toInt() / canvasSizeI, 1)
-        else if (!isSettingRobot && event.button == javafx.scene.input.MouseButton.SECONDARY)
-            map.updateMap(event.x.toInt() / canvasSizeI, event.y.toInt() / canvasSizeI, 0)
-
+        if(isEditing) {
+            if (!isSettingRobot && event.button == javafx.scene.input.MouseButton.PRIMARY)
+                map.updateMap(event.x.toInt() / canvasSizeI, event.y.toInt() / canvasSizeI, 1)
+            else if (!isSettingRobot && event.button == javafx.scene.input.MouseButton.SECONDARY)
+                map.updateMap(event.x.toInt() / canvasSizeI, event.y.toInt() / canvasSizeI, 0)
+        }
         drawMap(graphicsContext, drawingPart)
 
 
@@ -173,15 +182,14 @@ class MapDisplay @JvmOverloads constructor(
 
     private fun handleMouseDragged(event: MouseEvent, graphicsContext: GraphicsContext,graphicsContext2: GraphicsContext, drawingPart: Canvas,scanningPart: Canvas, startCoordinates: DoubleArray) {
         val flag = if (event.button == javafx.scene.input.MouseButton.PRIMARY) 1 else 0
-
-        // Обновляем карту по линии между предыдущей и текущей точками
-        updateMapAlongLine(
-            startCoordinates[0].toInt() / canvasSizeI,
-            startCoordinates[1].toInt() / canvasSizeI,
-            event.x.toInt() / canvasSizeI,
-            event.y.toInt() / canvasSizeI,
-            flag
-        )
+        if(isEditing) {// Обновляем карту по линии между предыдущей и текущей точками
+            updateMapAlongLine(
+                startCoordinates[0].toInt() / canvasSizeI,
+                startCoordinates[1].toInt() / canvasSizeI,
+                event.x.toInt() / canvasSizeI,
+                event.y.toInt() / canvasSizeI,
+                flag
+            )
 
         // Обновляем стартовые координаты для следующего вызова handleMouseDragged
         startCoordinates[0] = event.x
