@@ -7,36 +7,39 @@ import map.Map
 
 class Robot(private val map: Map)
 {
-    //конструктор для станции
-    constructor(map: Map, x: Int, y: Int) : this(map)
+    private val apparentDistance: Int = 10 //уровень сигнала(между роботами + расстояние видимости между роботом и стенкой)
+    var position = Position(null,null); //Позиция робота(по умолчанию 0,0)
+    var isMain: Boolean = false;
+    var isLast: Boolean = false;
+    //var path: Array<>
 
-    //Позиция робота(по умолчанию 0,0)
-    var PosX: Int? = null
-    var PosY: Int? = null
-    val apparentDistance: Int = 10
+    ///////временные поля!!!!!!!!! (удалить после создания станции)
+
+
+
 
     public fun moveRight()
     {
-        if (PosX != null && PosX!! + 1 < map.width && map.getCell(PosX!! + 1, PosY!!) == 0) {
-            PosX = PosX!! + 1
+        if (position.getX() != null && position.getX()!! + 1 < map.width && map.getCell(position.getX()!! + 1, position.getY()!!) == 0) {
+            position.setX(position.getX()!! + 1);
         }
     }
     public fun moveLeft()
     {
-        if (PosX != null && PosX!! - 1 >= 0 && map.getCell(PosX!! - 1, PosY!!) == 0) {
-            PosX = PosX!! - 1
+        if (position.getX() != null && position.getX()!! - 1 >= 0 && map.getCell(position.getX()!! - 1, position.getY()!!) == 0) {
+            position.setX(position.getX()!! - 1)
         }
     }
     public fun moveUp()
     {
-        if (PosY != null && PosY!! - 1 >= 0 && map.getCell(PosX!!, PosY!! - 1) == 0) {
-            PosY = PosY!! - 1
+        if (position.getY() != null && position.getY()!! - 1 >= 0 && map.getCell(position.getX()!!, position.getY()!! - 1) == 0) {
+            position.setY(position.getY()!! - 1)
         }
     }
     public fun moveDown()
     {
-        if (PosY != null && PosY!! + 1 < map.height && map.getCell(PosX!!, PosY!! + 1) == 0) {
-            PosY = PosY!!+ 1
+        if (position.getY() != null && position.getY()!! + 1 < map.height && map.getCell(position.getX()!!, position.getY()!! + 1) == 0) {
+            position.setY(position.getY()!! + 1)
         }
     }
 
@@ -50,24 +53,24 @@ class Robot(private val map: Map)
         for (i in 1 .. apparentDistance )
         {
 
-            if(flagLeft && map.getCell(PosX!!.minus(i), PosY!!) != 0)
+            if(flagLeft && map.getCell(position.getX()!!.minus(i), position.getY()!!) != 0)
             {
-                map.updateMap(PosX!!.minus(i), PosY!!, 2)
+                map.updateMap(position.getX()!!.minus(i), position.getY()!!, 2)
                 flagLeft = false
             }
-            if(flagRight && map.getCell(PosX!!.plus(i), PosY!!) != 0)
+            if(flagRight && map.getCell(position.getX()!!.plus(i), position.getY()!!) != 0)
             {
-                map.updateMap(PosX!!.plus(i), PosY!!, 2)
+                map.updateMap(position.getX()!!.plus(i), position.getY()!!, 2)
                 flagRight = false
             }
-            if(flagUp && map.getCell(PosX!!, PosY!!.plus(i)) != 0)
+            if(flagUp && map.getCell(position.getX()!!, position.getY()!!.plus(i)) != 0)
             {
-                map.updateMap(PosX!!, PosY!!.plus(i), 2)
+                map.updateMap(position.getX()!!, position.getY()!!.plus(i), 2)
                 flagUp = false
             }
-            if(flagDown && map.getCell(PosX!!, PosY!!.minus(i)) != 0)
+            if(flagDown && map.getCell(position.getX()!!, position.getY()!!.minus(i)) != 0)
             {
-                map.updateMap(PosX!!, PosY!!.minus(i), 2)
+                map.updateMap(position.getX()!!, position.getY()!!.minus(i), 2)
                 flagDown = false
             }
         }
