@@ -26,6 +26,7 @@ class MapDisplay @JvmOverloads constructor(
     private val canvasSizeD = 10.0 // Размер ячейки в пикселях
     private val canvasSizeI = 10 // Размер ячейки в пикселях (Int)
     private var isSettingRobot = false // Флаг для режима установки робота
+    private var isEditing = false // Флаг для режима редактирования карты
     private val dynamicText = SimpleStringProperty("0")
     companion object {
         var canvas = Canvas()
@@ -58,10 +59,25 @@ class MapDisplay @JvmOverloads constructor(
         val saveButton = createSaveButton(primaryStage, canvas)
         // Создаем кнопку "Загрузить"
         val loadButton = createLoadButton(primaryStage, canvas)
+        // Кнопка "Редактировать"
+        val editButton = ToggleButton("Редактировать")
+        editButton.setOnAction {
+            isEditing = editButton.isSelected
+            editButton.text = if (isEditing) "Режим редактирования включен" else "Редактировать"
+            canvas.isDisable = !isEditing // Отключаем/включаем взаимодействие с картой
+        }
+        // Кнопка "Подтвердить"
+        val confirmButton = Button("Подтвердить")
+        confirmButton.setOnAction {
+            isEditing = false
+            editButton.isSelected = false
+            editButton.text = "Редактировать"
+            canvas.isDisable = true // Полностью отключаем редактирование карты
+        }
 
         var exploreText = createExploreText(primaryStage, canvas)
 
-        val menuBar = HBox(10.0, saveButton, loadButton, setRobotButton, exploreText)
+        val menuBar = HBox(10.0, saveButton, loadButton, setRobotButton,editButton, confirmButton, exploreText)
 
         val scrollPane = ScrollPane()
         scrollPane.content = canvas
@@ -121,12 +137,12 @@ class MapDisplay @JvmOverloads constructor(
         startCoordinates[0] = event.x
         startCoordinates[1] = event.y
 
-
-        if (!isSettingRobot && event.button == javafx.scene.input.MouseButton.PRIMARY)
-            map.updateMap(event.x.toInt() / canvasSizeI, event.y.toInt() / canvasSizeI, 1)
-        else if (!isSettingRobot && event.button == javafx.scene.input.MouseButton.SECONDARY)
-            map.updateMap(event.x.toInt() / canvasSizeI, event.y.toInt() / canvasSizeI, 0)
-
+        if(isEditing) {
+            if (!isSettingRobot && event.button == javafx.scene.input.MouseButton.PRIMARY)
+                map.updateMap(event.x.toInt() / canvasSizeI, event.y.toInt() / canvasSizeI, 1)
+            else if (!isSettingRobot && event.button == javafx.scene.input.MouseButton.SECONDARY)
+                map.updateMap(event.x.toInt() / canvasSizeI, event.y.toInt() / canvasSizeI, 0)
+        }
         drawMap(graphicsContext, canvas)
 
 
@@ -148,19 +164,19 @@ class MapDisplay @JvmOverloads constructor(
 
     private fun handleMouseDragged(event: MouseEvent, graphicsContext: GraphicsContext,graphicsContext2: GraphicsContext, canvas: Canvas,canvas2: Canvas, startCoordinates: DoubleArray) {
         val flag = if (event.button == javafx.scene.input.MouseButton.PRIMARY) 1 else 0
+        if(isEditing) {// Обновляем карту по линии между предыдущей и текущей точками
+            updateMapAlongLine(
+                startCoordinates[0].toInt() / canvasSizeI,
+                startCoordinates[1].toInt() / canvasSizeI,
+                event.x.toInt() / canvasSizeI,
+                event.y.toInt() / canvasSizeI,
+                flag
+            )
 
-        // Обновляем карту по линии между предыдущей и текущей точками
-        updateMapAlongLine(
-            startCoordinates[0].toInt() / canvasSizeI,
-            startCoordinates[1].toInt() / canvasSizeI,
-            event.x.toInt() / canvasSizeI,
-            event.y.toInt() / canvasSizeI,
-            flag
-        )
-
-        // Обновляем стартовые координаты для следующего вызова handleMouseDragged
-        startCoordinates[0] = event.x
-        startCoordinates[1] = event.y
+            // Обновляем стартовые координаты для следующего вызова handleMouseDragged
+            startCoordinates[0] = event.x
+            startCoordinates[1] = event.y
+        }
 
         drawMap(graphicsContext, canvas)
         hideMap(graphicsContext2, canvas2)
