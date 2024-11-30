@@ -28,6 +28,10 @@ class MapDisplay @JvmOverloads constructor(
     private val canvasSizeI = 10 // Размер ячейки в пикселях (Int)
     private var isSettingRobot = false // Флаг для режима установки робота
     private val dynamicText = SimpleStringProperty("0")
+    companion object {
+        var canvas = Canvas()
+        var canvas2 = Canvas()
+    }
     override fun start(primaryStage: Stage) {
         val drawingPart = Canvas(map.width * canvasSizeD, map.height * canvasSizeD)
         val scanningPart= Canvas(map.width * canvasSizeD, map.height * canvasSizeD)
@@ -40,8 +44,8 @@ class MapDisplay @JvmOverloads constructor(
         drawMap(graphicsContext, drawingPart)
         hideMap(graphicsContext2, scanningPart)
 
-        //Кнопка для очистки карты(выпадающий список: 1 подпункт - очистить все, 2 подпункт - очистить правое окно)
-        //val clearButton = createClearButton(primaryStage, canvas)
+        drawMap(graphicsContext, canvas)
+        hideMap(graphicsContext2, canvas2)
 
         //Кнопка подтверждения
         //val submitButton = createSubmitButton(primaryStage, canvas)
@@ -53,6 +57,8 @@ class MapDisplay @JvmOverloads constructor(
         val setRobotButton = Button("Установить Робота")
         setRobotButton.setOnAction {
             isSettingRobot = true
+            //hideMap(graphicsContext, canvas)
+
         }
 
         // Создаем кнопку "Сохранить"
@@ -121,7 +127,7 @@ class MapDisplay @JvmOverloads constructor(
     //
     private fun createEditButton(primaryStage: Stage, canvas: Canvas)
     {
-        
+
     }
 
     private fun createClearButton(primaryStage: Stage, canvas: Canvas)
@@ -240,7 +246,7 @@ class MapDisplay @JvmOverloads constructor(
                 val file: File? = fileChooser.showSaveDialog(primaryStage)
                 if (file != null) {
                     when (format) {
-                        "PNG" -> map.saveMapAsPng(canvas, file.path)
+                        "PNG" -> map.saveMapAsPng(file.path)
                         "CSV" -> map.saveMapAsCsv(file.path)
                     }
                 }
@@ -271,7 +277,10 @@ class MapDisplay @JvmOverloads constructor(
                 val file: File? = fileChooser.showOpenDialog(primaryStage)
                 if (file != null) {
                     when (format) {
-                        "PNG" -> map.loadMapFromPng(file.path)  // Загружаем карту в формате PNG
+                        "PNG" ->{
+                            map.loadMapFromPng(file.path)
+                            drawMap(canvas.graphicsContext2D, canvas)
+                        }  // Загружаем карту в формате PNG
                         "CSV" -> {
                             map.loadMapFromCSV(file.path)
                             drawMap(canvas.graphicsContext2D, canvas)
@@ -334,7 +343,7 @@ class MapDisplay @JvmOverloads constructor(
     }
 
     private fun createExploreText(primaryStage: Stage, canvas: Canvas) : Label{
-        var exploreText = Label();
+        var exploreText = Label()
         exploreText.textProperty().bind(dynamicText)
         return exploreText
     }
