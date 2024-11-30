@@ -5,6 +5,7 @@ import javafx.scene.paint.Color
 
 
 import map.Map
+import kotlin.math.sqrt
 
 class Station(
     private val map: Map,
@@ -39,26 +40,24 @@ class Station(
 
 
     // Метод для запуска нового робота
+
     fun launchRobot() {
         if (robots.size < maxRobots) {
             val lastRobot = robots.last()
-            val newRobot = Robot(map, lastRobot.PosX!!, lastRobot.PosY!!)
+
+            val newRobot = Robot(map, lastRobot.position.getX()!!, lastRobot.position.getY()!!)
             robots.add(newRobot)
         }
     }
 
-
     fun drawStation(gc: GraphicsContext) {
-        gc.fill = Color.BLUE // Цвет станции
-        gc.fillRect(x * 10.0, y * 10.0, 10.0, 10.0) // Рисуем станцию
+        gc.fill = Color.BLUE
+        gc.fillRect(x * 10.0, y * 10.0, 10.0, 10.0)
     }
-
-    // Метод для перемещения всех роботов
     fun moveRobots(direction: Direction) {
         if (robots.isEmpty()) return
 
         val leadRobot = robots[0]
-
         // Перемещаем ведущего робота
         when (direction) {
             Direction.UP -> leadRobot.moveUp()
@@ -66,36 +65,45 @@ class Station(
             Direction.LEFT -> leadRobot.moveLeft()
             Direction.RIGHT -> leadRobot.moveRight()
         }
-
-
         // Перемещаем остальных роботов, сохраняя дистанцию
         for (i in 1 until robots.size) {
             val currentRobot = robots[i]
-            val previousRobot = robots[i-1]
+            val previousRobot = robots[i - 1]
             currentRobot.follow(previousRobot)
-
             // Запускаем радар для каждого робота
             currentRobot.radar()
-
         }
+
         // Запускаем радар для ведущего робота после перемещения остальных
         leadRobot.radar()
 
         // Добавляем роботов, если расстояние позволяет
         if (robots.size < maxRobots) {
-            val lastRobot = robots.last()
-            val distanceToPrevious = distance(lastRobot, robots[robots.size - 2])
-            if (distanceToPrevious > signalRange) {
-                launchRobot() // Запускаем нового робота
+            if (robots.size > 1) {
+                val lastRobot = robots.last()
+                val prevRobot = robots[robots.size - 2]
+                // используем position.getX() и position.getY() для расчета дистанции
+                val distanceToPrevious = distance(lastRobot, prevRobot)
+                if (distanceToPrevious > signalRange) {
+                    launchRobot()
+                }
+            } else if (robots.size == 1) {
+                // Случай, когда есть только один робот - сравниваем с начальной позицией станции
+                val distanceToStation = distance(robots[0], Robot(map, x,y))
+                if (distanceToStation > signalRange) {
+                    launchRobot()
+                }
             }
         }
     }
 
+
+
     // Функция для расчета расстояния между роботами
     private fun distance(robot1: Robot, robot2: Robot): Double {
-        val dx = robot1.PosX!! - robot2.PosX!!
-        val dy = robot1.PosY!! - robot2.PosY!!
-        return Math.sqrt((dx * dx + dy * dy).toDouble())
+        val dx = robot1.position.getX()!! - robot2.position.getX()!!
+        val dy = robot1.position.getY()!! - robot2.position.getY()!!
+        return sqrt((dx * dx + dy * dy).toDouble())
     }
 }
 
