@@ -197,8 +197,8 @@ class MapDisplay @JvmOverloads constructor(
         val y = (event.y / canvasSizeD).toInt()
         if (map.getCell(x, y) != 0 ) return
         if (x in 0 until map.width && y in 0 until map.height) {
-            robot.PosX = x
-            robot.PosY = y
+            robot.position.setX(x)
+            robot.position.setY(y)
             isSettingRobot = false
         }
     }
@@ -311,9 +311,9 @@ class MapDisplay @JvmOverloads constructor(
                 graphicsContext.fillRect(x * canvasSizeD, y * canvasSizeD, canvasSizeD, canvasSizeD)
             }
         }
-        if (!isSettingRobot && robot.PosX != null && robot.PosY != null) {
+        if (!isSettingRobot && robot.position.getX() != null && robot.position.getY() != null) {
             graphicsContext.fill = Color.RED
-            graphicsContext.fillRect(robot.PosX!! * canvasSizeD, robot.PosY!! * canvasSizeD, canvasSizeD, canvasSizeD)
+            graphicsContext.fillRect(robot.position.getX()!! * canvasSizeD, robot.position.getY()!! * canvasSizeD, canvasSizeD, canvasSizeD)
         }
     }
 
