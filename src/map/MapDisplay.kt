@@ -13,7 +13,9 @@ import javafx.scene.layout.VBox
 import javafx.scene.paint.Color
 import javafx.stage.FileChooser
 import javafx.stage.Stage
+import robot.Direction
 import robot.Robot
+import robot.Station
 import java.io.File
 import kotlin.math.abs
 import kotlin.math.sign
@@ -32,6 +34,7 @@ class MapDisplay @JvmOverloads constructor(
         var canvas = Canvas()
         var canvas2 = Canvas()
     }
+    private var station: Station? = null
     override fun start(primaryStage: Stage) {
         val drawingPart = Canvas(map.width * canvasSizeD, map.height * canvasSizeD)
         val scanningPart= Canvas(map.width * canvasSizeD, map.height * canvasSizeD)
@@ -51,7 +54,7 @@ class MapDisplay @JvmOverloads constructor(
         val setRobotButton = Button("Установить Робота")
         setRobotButton.setOnAction {
             isSettingRobot = true
-            //hideMap(graphicsContext, canvas)
+                //hideMap(graphicsContext, canvas)
 
         }
 
@@ -106,10 +109,10 @@ class MapDisplay @JvmOverloads constructor(
         primaryStage.scene.setOnKeyPressed { event ->
 
             when (event.code) {
-                KeyCode.W -> robot.moveUp()
-                KeyCode.S -> robot.moveDown()
-                KeyCode.A -> robot.moveLeft()
-                KeyCode.D -> robot.moveRight()
+                KeyCode.W -> station?.moveRobots(Direction.UP)
+                KeyCode.S -> station?.moveRobots(Direction.DOWN)
+                KeyCode.A -> station?.moveRobots(Direction.LEFT)
+                KeyCode.D -> station?.moveRobots(Direction.RIGHT)
                 else -> {}
             }
             robot.radar()
@@ -170,12 +173,23 @@ class MapDisplay @JvmOverloads constructor(
         startCoordinates[1] = event.y
 
         if (isSettingRobot) {
+            val x = (event.x / canvasSizeD).toInt()
+            val y = (event.y / canvasSizeD).toInt()
+
+            if (x in 0 until map.width && y in 0 until map.height && map.getCell(x,y) == 0) {
+                station = Station(map, x, y) // Создаем станцию
+                isSettingRobot = false
+                hideMap(graphicsContext, canvas) // Рисуем станцию и роботов
+            }
+        }
+        //старый код
+        /*if (isSettingRobot) {
             // Установка робота
             setRobotPosition(event)
             robot.radar()
             hideMap(graphicsContext, drawingPart)
             dynamicText.set(countPercentOfExploredCells())
-        }
+        }*/
 
     }
 
@@ -323,6 +337,15 @@ class MapDisplay @JvmOverloads constructor(
             graphicsContext.fill = Color.RED
             graphicsContext.fillRect(robot.position.getX()!! * canvasSizeD, robot.position.getY()!! * canvasSizeD, canvasSizeD, canvasSizeD)
         }
+        // Рисуем станцию, если она установлена
+        station?.drawStation(graphicsContext)
+
+        //Для отрисовки роботовв дальнейшем
+        /*// Рисуем роботов, если станция установлена
+        station?.robots?.forEach { if (it.PosX != null && it.PosY != null) {
+                it.drawRobot(graphicsContext)
+            }
+        }*/
     }
 
     private fun updateMapAlongLine(x1: Int, y1: Int, x2: Int, y2: Int, flag: Int) {

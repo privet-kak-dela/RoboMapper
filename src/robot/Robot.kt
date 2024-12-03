@@ -1,13 +1,23 @@
 package robot
 
+import javafx.scene.canvas.GraphicsContext
+import javafx.scene.paint.Color
+import jdk.nashorn.internal.runtime.regexp.joni.Config.log
 import map.Map
 
 class Robot(private val map: Map)
 {
+    constructor(map: Map, position: Position): this(map) {
+        this.position = position
+    }
+    constructor(map: Map, x: Int, y: Int): this(map) {
+        position.setX(x)
+        position.setY(y)
+    }
+
     private val apparentDistance: Int = 10 //уровень сигнала(между роботами + расстояние видимости между роботом и стенкой)
     var position = Position(null,null); //Позиция робота(по умолчанию 0,0)
-    var isMain: Boolean = false;
-    var isLast: Boolean = false;
+
     //var path: Array<>
 
     ///////временные поля!!!!!!!!! (удалить после создания станции)
@@ -72,6 +82,27 @@ class Robot(private val map: Map)
             }
         }
 
+    }
+
+
+    //тоже от себя
+
+    // Метод для следования робота
+    fun follow(other: Robot) {
+        position.setX(other.position.getX())
+        position.setY(other.position.getY())
+    }
+
+
+    fun drawRobot(gc: GraphicsContext) {
+        val x = position.getX()
+        val y = position.getY()
+        if (x != null && y != null) { // Проверка на null
+            gc.fill = Color.RED
+            gc.fillRect(x * 10.0, y * 10.0, 10.0, 10.0)
+        } else {
+            println("Robot position is not initialized. Cannot draw.")
+        }
     }
 
 }
