@@ -145,4 +145,21 @@ class Map(var height: Int, var width: Int) {
         } else {
             -1 // Или бросить исключение, если выход за границы недопустим
         }
+    // Очистка всей карты
+    fun clearAll() {
+        for (y in grid.indices) {
+            for (x in grid[y].indices) {
+                grid[y][x] = 0
+            }
+        }
+    }
+    fun clearRobotPaths() {
+        for (y in grid.indices) {
+            for (x in grid[y].indices) {
+                if (grid[y][x] == 2) {
+                    grid[y][x] = 1
+                }
+            }
+        }
+    }
 }

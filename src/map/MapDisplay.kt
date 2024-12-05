@@ -58,10 +58,16 @@ class MapDisplay @JvmOverloads constructor(
         val saveButton = createSaveButton(primaryStage, canvas)
         // Создаем кнопку "Загрузить"
         val loadButton = createLoadButton(primaryStage, canvas)
+        // Создаем кнопку "Очистить карту"
+        val clearAllButton = createClearAllButton()
+        // Создаем кнопку "Очистить следы робота"
+        val clearRobotPathsButton = Button("Очистить следы робота").apply {
+            setOnAction { handleClearRobotPaths(map, canvas2) }
+        }
 
         var exploreText = createExploreText(primaryStage, canvas)
 
-        val menuBar = HBox(10.0, saveButton, loadButton, setRobotButton, exploreText)
+        val menuBar = HBox(10.0, saveButton, loadButton,clearAllButton,clearRobotPathsButton, setRobotButton, exploreText,)
 
         val scrollPane = ScrollPane()
         scrollPane.content = canvas
@@ -325,5 +331,34 @@ class MapDisplay @JvmOverloads constructor(
 
     private fun countPercentOfExploredCells() : String{
         return String.format("%.2f",map.countTwos() / (map.countOnes() + map.countTwos()).toDouble() * 100)
+    }
+    private fun createClearAllButton(): Button {
+        val clearAllButton = Button("Очистить карту")
+        clearAllButton.setOnAction {
+            val alert = Alert(Alert.AlertType.CONFIRMATION)
+            alert.title = "Подтверждение очистки"
+            alert.headerText = "Очистить всю карту?"
+            alert.contentText = "Весь прогресс будет утерян. Вы уверены?"
+
+            val result = alert.showAndWait()
+            if (result.isPresent && result.get() == ButtonType.OK) {
+                map.clearAll()
+                drawMap(canvas.graphicsContext2D, canvas)
+                hideMap(canvas2.graphicsContext2D, canvas2)
+            }
+        }
+        return clearAllButton
+    }
+    private fun handleClearRobotPaths(map: Map, canvas2: Canvas) {
+        val alert = Alert(Alert.AlertType.CONFIRMATION)
+        alert.title = "Подтверждение очистки"
+        alert.headerText = "Очистить исследованную зону?"
+        alert.contentText = "Весь прогресс будет утерян. Вы уверены?"
+
+        val result = alert.showAndWait()
+        if (result.isPresent && result.get() == ButtonType.OK) {
+            map.clearRobotPaths()
+            hideMap(canvas2.graphicsContext2D, canvas2)
+        }
     }
 }
