@@ -1,5 +1,7 @@
 package map
 import javafx.embed.swing.SwingFXUtils
+import javafx.scene.control.Alert
+import javafx.scene.control.ButtonType
 import java.io.File
 import javafx.scene.image.WritableImage
 import javax.imageio.ImageIO
@@ -91,18 +93,17 @@ class Map(var height: Int, var width: Int) {
     fun loadMapFromPng(filePath: String) {
         //clearMap()
         val file = File(filePath)
-        if (file.exists()) {
+        if (file.exists()) {    
             // Загружаем изображение
             val image = Image(file.toURI().toString())
-            expandWidth(image.width.toInt())
-            expandHeight(image.height.toInt())
-            MapDisplay.canvas.width = width * 10.0
-            MapDisplay.canvas.height = height * 10.0
-            MapDisplay.canvas2.width = width * 10.0
-            MapDisplay.canvas2.height = height * 10.0
+            if(!setMapSize(image.width.toInt(), image.height.toInt())){
+                val alert = Alert(Alert.AlertType.NONE,"Карта больше допустимого размера", ButtonType.OK)
+                alert.showAndWait()
+                return
+            }
             val pixelReader: PixelReader = image.pixelReader
-            for (y in 0 until height) {
-                for (x in 0 until width) {
+            for (y in 0 until image.height.toInt()) {
+                for (x in 0 until image.width.toInt()) {
                     val color: Color = pixelReader.getColor(x, y)
                     if(color == Color.WHITE)
                         continue
@@ -120,12 +121,11 @@ class Map(var height: Int, var width: Int) {
         var y = 0
         if(file.exists()){
             val lines = file.readLines()
-            expandWidth(lines[0].length)
-            expandHeight(lines.size)
-            MapDisplay.canvas.width = width * 10.0
-            MapDisplay.canvas.height = height * 10.0
-            MapDisplay.canvas2.width = width * 10.0
-            MapDisplay.canvas2.height = height * 10.0
+            if(!setMapSize(lines[0].length - (lines[0].count { it == ',' }), lines.size)){
+                val alert = Alert(Alert.AlertType.NONE,"Карта больше допустимого размера", ButtonType.OK)
+                alert.showAndWait()
+                return
+            }
             for (line in lines) {
                 val values = line.split(",")
                 for(i in values.indices){
@@ -145,4 +145,17 @@ class Map(var height: Int, var width: Int) {
         } else {
             -1 // Или бросить исключение, если выход за границы недопустим
         }
+
+    private fun setMapSize(newWidth: Int, newHeight: Int): Boolean{
+        if(newWidth * newHeight > 550*295 || newWidth > 818 || newHeight > 818) {
+           return false
+        }
+        expandWidth(newWidth)
+        expandHeight(newHeight)
+        MapDisplay.canvas.width = width * 10.0
+        MapDisplay.canvas.height = height * 10.0
+        MapDisplay.canvas2.width = width * 10.0
+        MapDisplay.canvas2.height = height * 10.0
+        return true
+    }
 }
