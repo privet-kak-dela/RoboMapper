@@ -26,8 +26,9 @@ class MapDisplay @JvmOverloads constructor(
     private val canvasSizeD = 10.0 // Размер ячейки в пикселях
     private val canvasSizeI = 10 // Размер ячейки в пикселях (Int)
     private var isSettingRobot = false // Флаг для режима установки робота
+    private var isStationExist = false
     private var isEditing = false // Флаг для режима редактирования карты
-    private val dynamicText = SimpleStringProperty("0")
+
     companion object {
         var canvas = Canvas()
         var canvas2 = Canvas()
@@ -48,10 +49,36 @@ class MapDisplay @JvmOverloads constructor(
 
 
         // Кнопка для установки робота в любое место по клику
-        val setRobotButton = Button("Установить Робота")
+        val setRobotButton = Button("Установить станцию")
         setRobotButton.setOnAction {
-            isSettingRobot = true
+            if(!isEditing)
+            {
+                if(!isStationExist)
+                {
+                    isSettingRobot = true
+                }
+                else
+                {
+                    val alert = Alert(Alert.AlertType.CONFIRMATION)
+                    alert.title = "Установка станции"
+                    alert.headerText = "Весь прогресс будет утерян. Вы уверены?"
+
+                    val result = alert.showAndWait()
+                    if (result.isPresent && result.get() == ButtonType.OK) {
+                        map.clearRobotPaths()
+                        isSettingRobot = true
+                        hideMap(canvas2.graphicsContext2D, canvas2)
+                    }
+                }
+            }
             //hideMap(graphicsContext, canvas)
+
+            else
+            {
+                val alert = Alert(Alert.AlertType.CONFIRMATION)
+                alert.title = "Ошибка установки станции"
+                alert.headerText = "Подтвердите карту"
+                alert.showAndWait()}
 
         }
 
@@ -61,32 +88,58 @@ class MapDisplay @JvmOverloads constructor(
         val loadButton = createLoadButton(primaryStage, canvas)
 
         // Кнопка "Редактировать"
-        val editButton = ToggleButton("Редактировать")
+        val editButton = ToggleButton("Нарисовать карту")
         editButton.setOnAction {
-            isEditing = editButton.isSelected
-            editButton.text = if (isEditing) "Режим редактирования включен" else "Редактировать"
-            canvas.isDisable = !isEditing // Отключаем/включаем взаимодействие с картой
+            if(isStationExist)
+            {
+                val alert = Alert(Alert.AlertType.CONFIRMATION)
+                alert.title = "Редактирование карты"
+                alert.headerText = "Весь прогресс будет утерян. Вы уверены?"
+
+                val result = alert.showAndWait()
+                if (result.isPresent && result.get() == ButtonType.OK) {
+                    map.clearRobotPaths()
+                    robot.position.setX(null)
+                    robot.position.setY(null)
+                    isStationExist = false
+                    drawMap(canvas.graphicsContext2D, canvas)
+                    hideMap(canvas2.graphicsContext2D, canvas2)
+                    isEditing = editButton.isSelected
+                    editButton.text = if (isEditing) "Подтвердить" else "Редактировать"
+                    canvas.isDisable = !isEditing // Отключаем/включаем взаимодействие с картой
+                }
+            }
+            else
+            {
+                isEditing = editButton.isSelected
+                editButton.text = if (isEditing) "Подтвердить" else "Редактировать"
+                canvas.isDisable = !isEditing // Отключаем/включаем взаимодействие с картой
+            }
+
         }
-        // Кнопка "Подтвердить"
-        val confirmButton = Button("Подтвердить")
-        confirmButton.setOnAction {
-            isEditing = false
-            editButton.isSelected = false
-            editButton.text = "Редактировать"
-            canvas.isDisable = true // Полностью отключаем редактирование карты
-        }
+
         // Создаем кнопку "Очистить карту"
         val clearAllButton = createClearAllButton()
         // Создаем кнопку "Очистить следы робота"
-        val clearRobotPathsButton = Button("Очистить следы робота").apply {
+        val clearRobotPathsButton = Button("Очистить исследованную территорию").apply {
             setOnAction { handleClearRobotPaths(map, canvas2) }
 
         }
 
-        var exploreText = createExploreText(primaryStage, canvas)
+//        val confirmButton = Button("Подтвердить")
+//        confirmButton.setOnAction {
+//            isEditing = false
+//            editButton.isSelected = false
+//            editButton.text = "Редактировать"
+//            canvas.isDisable = true // Полностью отключаем редактирование карты
+//        }
 
 
-        val menuBar = HBox(10.0, saveButton, loadButton,clearAllButton,clearRobotPathsButton, setRobotButton, exploreText,)
+
+
+
+        val menuBar = HBox(10.0, saveButton, loadButton,editButton,clearAllButton,clearRobotPathsButton, setRobotButton)
+
 
         val scrollPane = ScrollPane()
         scrollPane.content = canvas
@@ -123,7 +176,7 @@ class MapDisplay @JvmOverloads constructor(
             robot.radar()
             drawMap(graphicsContext, canvas)
             hideMap(graphicsContext2, canvas2)
-            dynamicText.set(countPercentOfExploredCells())
+
         }
 
 
@@ -165,7 +218,7 @@ class MapDisplay @JvmOverloads constructor(
             setRobotPosition(event)
             robot.radar()
             hideMap(graphicsContext, canvas)
-            dynamicText.set(countPercentOfExploredCells())
+
         }
 
     }
@@ -200,6 +253,7 @@ class MapDisplay @JvmOverloads constructor(
             robot.position.setX(x)
             robot.position.setY(y)
             isSettingRobot = false
+            isStationExist = true
         }
     }
 
@@ -342,26 +396,19 @@ class MapDisplay @JvmOverloads constructor(
         }
     }
 
-    private fun createExploreText(primaryStage: Stage, canvas: Canvas) : Label{
-        var exploreText = Label()
-        exploreText.textProperty().bind(dynamicText)
-        return exploreText
-    }
 
-    private fun countPercentOfExploredCells() : String{
-        return String.format("%.2f",map.countTwos() / (map.countOnes() + map.countTwos()).toDouble() * 100)
-    }
     private fun createClearAllButton(): Button {
         val clearAllButton = Button("Очистить карту")
         clearAllButton.setOnAction {
             val alert = Alert(Alert.AlertType.CONFIRMATION)
             alert.title = "Подтверждение очистки"
-            alert.headerText = "Очистить всю карту?"
-            alert.contentText = "Весь прогресс будет утерян. Вы уверены?"
+            alert.headerText = "Весь прогресс будет утерян. Вы уверены?"
 
             val result = alert.showAndWait()
             if (result.isPresent && result.get() == ButtonType.OK) {
                 map.clearAll()
+                robot.position.setX(null)
+                robot.position.setY(null)
                 drawMap(canvas.graphicsContext2D, canvas)
                 hideMap(canvas2.graphicsContext2D, canvas2)
             }
@@ -371,8 +418,8 @@ class MapDisplay @JvmOverloads constructor(
     private fun handleClearRobotPaths(map: Map, canvas2: Canvas) {
         val alert = Alert(Alert.AlertType.CONFIRMATION)
         alert.title = "Подтверждение очистки"
-        alert.headerText = "Очистить исследованную зону?"
-        alert.contentText = "Весь прогресс будет утерян. Вы уверены?"
+        alert.headerText = "Вы точно хотите очистить исследованную зону?"
+
 
         val result = alert.showAndWait()
         if (result.isPresent && result.get() == ButtonType.OK) {
@@ -380,4 +427,5 @@ class MapDisplay @JvmOverloads constructor(
             hideMap(canvas2.graphicsContext2D, canvas2)
         }
     }
+
 }
