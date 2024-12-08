@@ -2,17 +2,22 @@ package map
 
 import javafx.application.Application
 import javafx.beans.property.SimpleStringProperty
+import javafx.geometry.Insets
+import javafx.geometry.Pos
 import javafx.scene.Scene
 import javafx.scene.canvas.Canvas
 import javafx.scene.canvas.GraphicsContext
 import javafx.scene.control.*
 import javafx.scene.input.KeyCode
 import javafx.scene.input.MouseEvent
+import javafx.scene.layout.GridPane
 import javafx.scene.layout.HBox
 import javafx.scene.layout.VBox
 import javafx.scene.paint.Color
 import javafx.stage.FileChooser
+import javafx.stage.Modality
 import javafx.stage.Stage
+import javafx.stage.Window
 import robot.Robot
 import java.io.File
 import kotlin.math.abs
@@ -49,6 +54,7 @@ class MapDisplay @JvmOverloads constructor(
 
 
         // Кнопка для установки робота в любое место по клику
+
         val setRobotButton = Button("Установить станцию")
         setRobotButton.setOnAction {
             if(!isEditing)
@@ -56,6 +62,7 @@ class MapDisplay @JvmOverloads constructor(
                 if(!isStationExist)
                 {
                     isSettingRobot = true
+                    displayInputWindow();
                 }
                 else
                 {
@@ -79,6 +86,7 @@ class MapDisplay @JvmOverloads constructor(
                 alert.title = "Ошибка установки станции"
                 alert.headerText = "Подтвердите карту"
                 alert.showAndWait()}
+
 
         }
 
@@ -426,6 +434,90 @@ class MapDisplay @JvmOverloads constructor(
             map.clearRobotPaths()
             hideMap(canvas2.graphicsContext2D, canvas2)
         }
+    }
+
+
+
+    //Выводит окно с сообщением, что переданные значения не удовлетворяют условиям
+    private fun showWrongInputMessage(message: String)
+    {
+        val inputWindow = Stage();
+        inputWindow.initModality(Modality.APPLICATION_MODAL);
+        inputWindow.title = "Wrong Parameters"
+
+        val msg = Label(message)
+
+        val layout = VBox(10.0);
+        layout.children.addAll(msg)
+        layout.alignment = Pos.CENTER
+        val inputScene = Scene(layout, 200.0, 100.0);
+        inputWindow.scene = inputScene;
+        inputWindow.showAndWait()
+    }
+
+    //--Проверка, что введеные значения - числа
+    //--Если числа - записывает их в параметры
+    //--Если нет - выводит сообщение о неправильности данных и возвращает false
+    private fun infoValidation(input:TextField, message:String , input2:TextField, message2:String, stage: Stage ) : Boolean
+    {
+        try {
+            val number: Int = Integer.parseInt(input.text) //Поменять на параметр
+        }catch ( e : NumberFormatException)
+        {
+            showWrongInputMessage(input.text + " не является числом")
+            return false
+        }
+
+        try {
+            val number2: Int = Integer.parseInt(input2.text) //Поменять на параметр
+            stage.close()
+            return true
+        }catch ( e : NumberFormatException)
+        {
+            showWrongInputMessage(input2.text + "не является числом")
+            //Вернуть первому параметру старое значение?
+            return false
+        }
+    }
+
+
+    //Отображает окно для ввода количества роботов и уровня сигнала
+    private fun displayInputWindow()
+    {
+        val inputWindow = Stage();
+        inputWindow.initModality(Modality.APPLICATION_MODAL);
+        inputWindow.title = "Input Parameters"
+
+        val grid = GridPane();
+        grid.padding = Insets(10.0, 10.0, 10.0, 10.0);
+        grid.vgap = 8.0;
+        grid.hgap = 8.0;
+
+        val robotCountLabel = Label("Введите количество роботов")
+        GridPane.setConstraints(robotCountLabel, 0, 0);
+
+        val robotCountInput = TextField()
+        GridPane.setConstraints(robotCountInput, 0, 1);
+
+        val signalLevelLabel = Label("Введите уровень сигнала")
+        GridPane.setConstraints(signalLevelLabel, 0, 2);
+
+        val signalLevelInput = TextField()
+        GridPane.setConstraints(signalLevelInput, 0, 3);
+
+        val okButton = Button("Ok")
+        okButton.setOnAction { e -> infoValidation(robotCountInput, robotCountInput.text, signalLevelInput, signalLevelInput.text, inputWindow) }
+
+        val layout = VBox(10.0);
+        layout.children.addAll(okButton)
+        layout.alignment = Pos.CENTER
+        GridPane.setConstraints(layout, 0, 4);
+
+        grid.children.addAll(robotCountLabel, robotCountInput, signalLevelLabel, signalLevelInput, layout)
+
+        val inputScene = Scene(grid, 300.0, 200.0);
+        inputWindow.scene = inputScene;
+        inputWindow.showAndWait()
     }
 
 }
