@@ -24,7 +24,7 @@ class Robot(private val map: Map)
 
     ///////временные поля!!!!!!!!! (удалить после создания станции)
 
-    private fun warningMessage(var warn: string) {
+    private fun warningMessage(warn: String) {
         var alert = Alert(AlertType.INFORMATION)
         alert.title = "Предупреждение"
         alert.headerText = null
@@ -35,11 +35,11 @@ class Robot(private val map: Map)
     public fun moveRight()
     {
         if (position.getX() != null) {
-            for (rob in robots) {
-                if (position.getX()!! + 1 == rob.position.getX()!! && position.getY()!! == rob.position.getY()) {
-                    warningMessage("Осторожно! Столкновение!")
-                }
-            }
+//            for (rob in robots) {
+//                if (position.getX()!! + 1 == rob.position.getX()!! && position.getY()!! == rob.position.getY()) {
+//                    warningMessage("Осторожно! Столкновение!")
+//                }
+//            }
             if (position.getX()!! + 1 < map.width && map.getCell(position.getX()!! + 1, position.getY()!!) == 0) {
                 position.setX(position.getX()!! + 1)
             } else {
@@ -50,11 +50,11 @@ class Robot(private val map: Map)
     public fun moveLeft()
     {
         if (position.getX() != null) {
-            for (rob in robots) {
-                if (position.getX()!! - 1 == rob.position.getX()!! && position.getY()!! == rob.position.getY()) {
-                    warningMessage("Осторожно! Столкновение!")
-                }
-            }
+//            for (rob in robots) {
+//                if (position.getX()!! - 1 == rob.position.getX()!! && position.getY()!! == rob.position.getY()) {
+//                    warningMessage("Осторожно! Столкновение!")
+//                }
+//            }
 
             if (position.getX()!! - 1 >= 0 && map.getCell(position.getX()!! - 1, position.getY()!!) == 0) {
                 position.setX(position.getX()!! - 1)
@@ -66,11 +66,11 @@ class Robot(private val map: Map)
     public fun moveUp()
     {
         if (position.getY() != null) {
-            for (rob in robots) {
-                if (position.getX()!! == rob.position.getX()!! && position.getY()!! - 1 == rob.position.getY()) {
-                    warningMessage("Осторожно! Столкновение!")
-                }
-            }
+//            for (rob in robots) {
+//                if (position.getX()!! == rob.position.getX()!! && position.getY()!! - 1 == rob.position.getY()) {
+//                    warningMessage("Осторожно! Столкновение!")
+//                }
+//            }
             if (position.getY()!! - 1 >= 0 && map.getCell(position.getX()!!, position.getY()!! - 1) == 0) {
                 position.setY(position.getY()!! - 1)
             } else {
@@ -81,11 +81,11 @@ class Robot(private val map: Map)
     public fun moveDown()
     {
         if (position.getY() != null) {
-            for (rob in robots) {
-                if (position.getX()!! == rob.position.getX()!! && position.getY()!! + 1 == rob.position.getY()) {
-                    warningMessage("Осторожно! Столкновение!")
-                }
-            }
+//            for (rob in robots) {
+//                if (position.getX()!! == rob.position.getX()!! && position.getY()!! + 1 == rob.position.getY()) {
+//                    warningMessage("Осторожно! Столкновение!")
+//                }
+//            }
 
             if (position.getY()!! + 1 < map.height && map.getCell(position.getX()!!, position.getY()!! + 1) == 0) {
                 position.setY(position.getY()!! + 1)
