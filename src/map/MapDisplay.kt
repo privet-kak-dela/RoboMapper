@@ -22,9 +22,10 @@ import kotlin.math.sign
 
 
 class MapDisplay @JvmOverloads constructor(
-    private val map: Map = Map(20, 20) // Если нужно, можно создать карту по умолчанию 20x20
-) : Application() {
-    private val robot: Robot = Robot(map)
+    private val map: Map = Map(20, 20)) : Application() {
+
+
+    private val robot: Robot = Robot(map, null, null)
     private val canvasSizeD = 10.0 // Размер ячейки в пикселях
     private val canvasSizeI = 10 // Размер ячейки в пикселях (Int)
     private var isSettingRobot = false // Флаг для режима установки робота
@@ -35,6 +36,7 @@ class MapDisplay @JvmOverloads constructor(
         var canvas2 = Canvas()
     }
     private var station: Station? = null
+
     override fun start(primaryStage: Stage) {
         val drawingPart = Canvas(map.width * canvasSizeD, map.height * canvasSizeD)
         val scanningPart= Canvas(map.width * canvasSizeD, map.height * canvasSizeD)
@@ -62,7 +64,6 @@ class MapDisplay @JvmOverloads constructor(
         val saveButton = createSaveButton(primaryStage, drawingPart)
         // Создаем кнопку "Загрузить"
         val loadButton = createLoadButton(primaryStage, drawingPart)
-        val loadButton = createLoadButton(primaryStage, canvas)
         // Кнопка "Редактировать"
         val editButton = ToggleButton("Редактировать")
         editButton.setOnAction {
@@ -107,18 +108,34 @@ class MapDisplay @JvmOverloads constructor(
         primaryStage.show()
 
         primaryStage.scene.setOnKeyPressed { event ->
-
-            when (event.code) {
-                KeyCode.W -> station?.moveRobots(Direction.UP)
-                KeyCode.S -> station?.moveRobots(Direction.DOWN)
-                KeyCode.A -> station?.moveRobots(Direction.LEFT)
-                KeyCode.D -> station?.moveRobots(Direction.RIGHT)
-                else -> {}
+            if(station != null) {
+                if(station?.maxRobots != station?.robots?.size) {
+                    when (event.code) {
+                        KeyCode.W -> station?.moveRobots(Direction.UP, graphicsContext2)
+                        KeyCode.S -> station?.moveRobots(Direction.DOWN, graphicsContext2)
+                        KeyCode.A -> station?.moveRobots(Direction.LEFT, graphicsContext2)
+                        KeyCode.D -> station?.moveRobots(Direction.RIGHT, graphicsContext2)
+                        else -> {}
+                    }
+                }
+                else{
+                    when (event.code) {
+                        KeyCode.W -> station?.launchRobot(Direction.UP, graphicsContext2)
+                        KeyCode.S -> station?.launchRobot(Direction.DOWN, graphicsContext2)
+                        KeyCode.A -> station?.launchRobot(Direction.LEFT, graphicsContext2)
+                        KeyCode.D -> station?.launchRobot(Direction.RIGHT, graphicsContext2)
+                        else -> {}
+                    }
+                }
+                drawMap(graphicsContext, drawingPart)
+                hideMap(graphicsContext2, scanningPart)
+                station?.drawRobots(graphicsContext2)
             }
-            robot.radar()
-            drawMap(graphicsContext, drawingPart)
-            hideMap(graphicsContext2, scanningPart)
-            dynamicText.set(countPercentOfExploredCells())
+           //if(robot.position.getX() != null)
+                //robot.radar()
+           // drawMap(graphicsContext, drawingPart)
+            //hideMap(graphicsContext2, scanningPart)
+            //dynamicText.set(countPercentOfExploredCells())
         }
 
 
@@ -168,7 +185,7 @@ class MapDisplay @JvmOverloads constructor(
 
 
     }
-    private fun handleMousePressedSetRobotPosition(event: MouseEvent, graphicsContext: GraphicsContext, drawingPart: Canvas, startCoordinates: DoubleArray) {
+    private fun handleMousePressedSetRobotPosition(event: MouseEvent, graphicsContext: GraphicsContext, scanningPart: Canvas, startCoordinates: DoubleArray) {
         startCoordinates[0] = event.x
         startCoordinates[1] = event.y
 
@@ -181,6 +198,7 @@ class MapDisplay @JvmOverloads constructor(
                 isSettingRobot = false
                 hideMap(graphicsContext, canvas) // Рисуем станцию и роботов
             }
+
         }
         //старый код
         /*if (isSettingRobot) {
@@ -204,7 +222,7 @@ class MapDisplay @JvmOverloads constructor(
                 event.y.toInt() / canvasSizeI,
                 flag
             )
-
+        }
         // Обновляем стартовые координаты для следующего вызова handleMouseDragged
         startCoordinates[0] = event.x
         startCoordinates[1] = event.y

@@ -2,15 +2,17 @@ package robot
 
 import javafx.scene.canvas.GraphicsContext
 import javafx.scene.paint.Color
-import jdk.nashorn.internal.runtime.regexp.joni.Config.log
+//import jdk.nashorn.internal.runtime.regexp.joni.Config.log
 import map.Map
+import java.lang.Thread.sleep
+import kotlin.math.abs
 
-class Robot(private val map: Map)
+class Robot(private val map: Map): Machine
 {
     constructor(map: Map, position: Position): this(map) {
         this.position = position
     }
-    constructor(map: Map, x: Int, y: Int): this(map) {
+    constructor(map: Map, x: Int?, y: Int?): this(map) {
         position.setX(x)
         position.setY(y)
     }
@@ -18,35 +20,40 @@ class Robot(private val map: Map)
     private val apparentDistance: Int = 10 //уровень сигнала(между роботами + расстояние видимости между роботом и стенкой)
     var position = Position(null,null); //Позиция робота(по умолчанию 0,0)
 
-    //var path: Array<>
+    var prevRobot: Machine? = null
+    var nextRobot: Robot? = null
+    var isLast: Boolean = false
+    var isLead: Boolean = false
 
-    ///////временные поля!!!!!!!!! (удалить после создания станции)
-
-
+    var path: MutableList<Position> = mutableListOf()
 
 
     public fun moveRight()
     {
         if (position.getX() != null && position.getX()!! + 1 < map.width && map.getCell(position.getX()!! + 1, position.getY()!!) == 0) {
             position.setX(position.getX()!! + 1);
+            path.add(Position(position.getX()!!, position.getY()!!));
         }
     }
     public fun moveLeft()
     {
         if (position.getX() != null && position.getX()!! - 1 >= 0 && map.getCell(position.getX()!! - 1, position.getY()!!) == 0) {
             position.setX(position.getX()!! - 1)
+            path.add(Position(position.getX()!!, position.getY()!!));
         }
     }
     public fun moveUp()
     {
         if (position.getY() != null && position.getY()!! - 1 >= 0 && map.getCell(position.getX()!!, position.getY()!! - 1) == 0) {
             position.setY(position.getY()!! - 1)
+            path.add(Position(position.getX()!!, position.getY()!!));
         }
     }
     public fun moveDown()
     {
         if (position.getY() != null && position.getY()!! + 1 < map.height && map.getCell(position.getX()!!, position.getY()!! + 1) == 0) {
             position.setY(position.getY()!! + 1)
+            path.add(Position(position.getX()!!, position.getY()!!));
         }
     }
 
@@ -59,7 +66,6 @@ class Robot(private val map: Map)
 
         for (i in 1 .. apparentDistance )
         {
-
             if(flagLeft && map.getCell(position.getX()!!.minus(i), position.getY()!!) != 0)
             {
                 map.updateMap(position.getX()!!.minus(i), position.getY()!!, 2)
@@ -84,15 +90,45 @@ class Robot(private val map: Map)
 
     }
 
-
-    //тоже от себя
-
-    // Метод для следования робота
-    fun follow(other: Robot) {
-        position.setX(other.position.getX())
-        position.setY(other.position.getY())
+    fun isLostConnection(other: Robot): Boolean {
+        val dx = abs(other.position.getX()!! - position.getX()!!)
+        val dy = abs(other.position.getY()!! - position.getY()!!)
+        return !(dx < 10 && dy == 0 || dy < 10 && dx == 0)
     }
 
+    // Метод для следования робота
+    override fun follow(other: Machine, gc: GraphicsContext) {
+        var robot = other as Robot
+        var pos = robot.path.indexOfLast { p -> p.getX() == position.getX() && p.getY() == position.getY() }
+        gc.fill = Color.WHITE
+        gc.fillRect(position.getX()!! * 10.0, position.getY()!! * 10.0, 10.0, 10.0)
+        position.setX(robot.path[pos + 1].getX())
+        position.setY(robot.path[pos + 1].getY())
+        path.add(Position(position.getX()!!, position.getY()!!))
+
+        drawRobot(gc)
+        if(isLostConnection(prevRobot!!)) {
+            prevRobot?.follow(this, gc)
+        }
+        if(isLostConnection(robot))
+            follow(robot, gc)
+    }
+
+    override fun isLostConnection(other: Machine): Boolean {
+        var dx: Int
+        var dy: Int
+        if(other is Robot) {
+            var o = other as Robot
+            dx = abs(o.position.getX()!! - position.getX()!!)
+            dy = abs(o.position.getY()!! - position.getY()!!)
+        }
+        else {
+            var o = other as Station
+            dx = abs(o.position.getX()!! - position.getX()!!)
+            dy = abs(o.position.getY()!! - position.getY()!!)
+        }
+        return !(dx < 10 && dy == 0 || dy < 10 && dx == 0)
+    }
 
     fun drawRobot(gc: GraphicsContext) {
         val x = position.getX()
