@@ -8,17 +8,19 @@ import kotlin.math.sqrt
 
 class Station(private val map: Map): Machine {
 
-    val signalRange: Int = 10
-    val maxRobots: Int = 10
+    var signalRange: Int = 10
+    var maxRobots: Int = 10
     var lastRobot: Robot? = null
     var leadRobot: Robot? = null
     var position = Position(null,null);
     val robots = mutableListOf<Robot>()
 
-    constructor(map: Map, x: Int?, y: Int?): this(map) {
+    constructor(map: Map, x: Int?, y: Int?, maxRobots: Int?, signalRange: Int?): this(map) {
         position.setX(x)
         position.setY(y)
-        for (i in 0 until maxRobots) {
+        this.maxRobots = maxRobots!!
+        this.signalRange = signalRange!!
+        for (i in 0 until this.maxRobots) {
             robots.add(Robot(map, position.getX(), position.getY()))
         }
     }
@@ -42,6 +44,7 @@ class Station(private val map: Map): Machine {
                 Direction.LEFT -> lastRobot?.moveLeft()
                 Direction.RIGHT -> lastRobot?.moveRight()
             }
+            lastRobot!!.apparentDistance = signalRange
             lastRobot!!.drawRobot(gc)
             robots.removeLast()
         }

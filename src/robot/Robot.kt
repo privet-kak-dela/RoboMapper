@@ -142,7 +142,7 @@ class Robot(private val map: Map): Machine
     fun isLostConnection(other: Robot): Boolean {
         val dx = abs(other.position.getX()!! - position.getX()!!)
         val dy = abs(other.position.getY()!! - position.getY()!!)
-        return !(dx < 10 && dy == 0 || dy < 10 && dx == 0)
+        return !(dx < apparentDistance && dy == 0 || dy < apparentDistance && dx == 0)
     }
 
     // Метод для следования робота
@@ -176,7 +176,7 @@ class Robot(private val map: Map): Machine
             dx = abs(o.position.getX()!! - position.getX()!!)
             dy = abs(o.position.getY()!! - position.getY()!!)
         }
-        return !(dx < 10 && dy == 0 || dy < 10 && dx == 0)
+        return !(dx < apparentDistance && dy == 0 || dy < apparentDistance && dx == 0)
     }
 
     fun drawRobot(gc: GraphicsContext) {
