@@ -65,6 +65,7 @@ class MapDisplay @JvmOverloads constructor(
                 if(!isStationExist)
                 {
                     isSettingRobot = true
+                    isStationExist = true
                     displayInputWindow();
                 }
                 else
@@ -77,6 +78,7 @@ class MapDisplay @JvmOverloads constructor(
                     if (result.isPresent && result.get() == ButtonType.OK) {
                         map.clearRobotPaths()
                         isSettingRobot = true
+                        isStationExist = true
                         hideMap(canvas2.graphicsContext2D, canvas2)
                     }
                 }
@@ -109,6 +111,7 @@ class MapDisplay @JvmOverloads constructor(
                 val result = alert.showAndWait()
                 if (result.isPresent && result.get() == ButtonType.OK) {
                     map.clearRobotPaths()
+                    station = null
                     //robot.position.setX(null)
                     //robot.position.setY(null)
                     isStationExist = false
@@ -467,6 +470,8 @@ class MapDisplay @JvmOverloads constructor(
             val result = alert.showAndWait()
             if (result.isPresent && result.get() == ButtonType.OK) {
                 map.clearAll()
+                station = null
+                isStationExist = false
                 //station.robotBack()
                 drawMap(gc, canvas)
                 hideMap(gc2, canvas2)
@@ -522,7 +527,7 @@ class MapDisplay @JvmOverloads constructor(
         }
 
         try {
-            signalRange = Integer.parseInt(message) //Поменять на параметр
+            signalRange = Integer.parseInt(message)+1 //Поменять на параметр
             stage.close()
             return true
         }catch ( e : NumberFormatException)
@@ -546,13 +551,13 @@ class MapDisplay @JvmOverloads constructor(
         grid.vgap = 8.0;
         grid.hgap = 8.0;
 
-        val robotCountLabel = Label("Введите количество роботов")
+        val robotCountLabel = Label("Введите уровень сигнала ")
         GridPane.setConstraints(robotCountLabel, 0, 0);
 
         val robotCountInput = TextField()
         GridPane.setConstraints(robotCountInput, 0, 1);
 
-        val signalLevelLabel = Label("Введите уровень сигнала")
+        val signalLevelLabel = Label("Введите количество роботов")
         GridPane.setConstraints(signalLevelLabel, 0, 2);
 
 
