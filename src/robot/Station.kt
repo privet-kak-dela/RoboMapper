@@ -31,11 +31,13 @@ class Station(private val map: Map): Machine {
             if (robots.size == maxRobots) {
                 leadRobot = robots.last()
                 leadRobot?.isLead = true
-
+                lastRobot?.nextRobot = null
             }
             if(lastRobot != null) {
+                robots.last().nextRobot = lastRobot
                 lastRobot?.prevRobot = robots.last()
             }
+
             lastRobot = robots.last()
             lastRobot?.prevRobot = this
             when (direction) {
@@ -96,6 +98,30 @@ class Station(private val map: Map): Machine {
         val dx = abs(position.getX()!! - (other as Robot).position.getX()!!)
         val dy = abs(position.getY()!! - (other as Robot).position.getY()!!)
         return !(dx < signalRange && dy == 0 || dy < signalRange && dx == 0)
+    }
+
+    fun robotBack(gc: GraphicsContext)
+    {
+        while(robots.size != maxRobots)
+        {
+            var cur: Robot? = lastRobot
+            while(cur != null)
+            {
+                cur.back(gc)
+                cur = cur.nextRobot
+            }
+            if(lastRobot?.path?.isEmpty() == true)
+            {
+                robots.add(lastRobot!!)
+                gc.fill = Color.WHITE
+                gc.fillRect(lastRobot!!.position.getX()!! * 10.0, lastRobot!!.position.getY()!! * 10.0, 10.0, 10.0)
+                lastRobot = lastRobot?.nextRobot
+            }
+        }
+
+
+
+
     }
 }
 

@@ -163,6 +163,20 @@ class Robot(private val map: Map): Machine
             follow(robot, gc)
     }
 
+    fun back(gc: GraphicsContext)
+    {
+        gc.fill = Color.WHITE
+        gc.fillRect(position.getX()!! * 10.0, position.getY()!! * 10.0, 10.0, 10.0)
+        position.setX(path[path.size - 1].getX())
+        position.setY(path[path.size - 1].getY())
+        path.removeAt(path.size - 1)
+
+        drawRobot(gc)
+
+    }
+
+
+
     override fun isLostConnection(other: Machine): Boolean {
         var dx: Int
         var dy: Int

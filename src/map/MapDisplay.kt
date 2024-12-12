@@ -92,6 +92,12 @@ class MapDisplay @JvmOverloads constructor(
                 alert.showAndWait()
             }
         }
+        // Кнопка для установки робота в любое место по клику
+        val returnRobots = Button("Вернуть роботов")
+        returnRobots.setOnAction {
+            station?.robotBack(graphicsContext2)
+
+        }
 
         // Создаем кнопку "Сохранить"
         val saveButton = createSaveButton(primaryStage, drawingPart)
@@ -149,7 +155,7 @@ class MapDisplay @JvmOverloads constructor(
 //            canvas.isDisable = true // Полностью отключаем редактирование карты
 //        }
 
-        val menuBar = HBox(10.0, saveButton, loadButton,editButton,clearAllButton,clearRobotPathsButton, setRobotButton)
+        val menuBar = HBox(10.0, saveButton, loadButton,editButton,clearAllButton,clearRobotPathsButton, setRobotButton, returnRobots)
 
         val scrollPane = ScrollPane()
         scrollPane.content = drawingPart
@@ -470,9 +476,10 @@ class MapDisplay @JvmOverloads constructor(
             val result = alert.showAndWait()
             if (result.isPresent && result.get() == ButtonType.OK) {
                 map.clearAll()
+                station?.robotBack(gc2)
                 station = null
                 isStationExist = false
-                //station.robotBack()
+
                 drawMap(gc, canvas)
                 hideMap(gc2, canvas2)
             }
@@ -488,8 +495,8 @@ class MapDisplay @JvmOverloads constructor(
 
         val result = alert.showAndWait()
         if (result.isPresent && result.get() == ButtonType.OK) {
+            station?.robotBack(gc)
             map.clearRobotPaths()
-            //station.robotBack()
             hideMap(gc, canvas)
         }
     }
