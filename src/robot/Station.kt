@@ -3,6 +3,7 @@ package robot
 import javafx.scene.canvas.GraphicsContext
 import javafx.scene.paint.Color
 import map.Map
+import java.lang.Thread.sleep
 import kotlin.math.abs
 import kotlin.math.sqrt
 
@@ -21,9 +22,13 @@ class Station(private val map: Map): Machine {
         this.maxRobots = maxRobots!!
         this.signalRange = signalRange!!
         for (i in 0 until this.maxRobots) {
-            robots.add(Robot(map, position.getX(), position.getY()))
+            var robot = Robot(map, position.getX(), position.getY())
+            robot.path.add(Position(position.getX(), position.getY()))
+            robots.add(robot)
         }
     }
+
+    var dir: Direction? = null
 
     // Метод для запуска нового робота
     fun launchRobot(direction: Direction, gc: GraphicsContext) {
@@ -32,6 +37,7 @@ class Station(private val map: Map): Machine {
                 leadRobot = robots.last()
                 leadRobot?.isLead = true
                 lastRobot?.nextRobot = null
+                dir = direction
             }
             if(lastRobot != null) {
                 robots.last().nextRobot = lastRobot
@@ -61,7 +67,8 @@ class Station(private val map: Map): Machine {
     fun drawRobots(gc: GraphicsContext) {
         var cur: Machine? = leadRobot
         while(cur is Robot){
-            cur.drawRobot(gc)
+           if(cur.position.getX() != position.getX() || cur.position.getY() != position.getY())
+                cur.drawRobot(gc)
             cur = cur.prevRobot
         }
     }
@@ -89,7 +96,11 @@ class Station(private val map: Map): Machine {
 
     override fun follow(other: Machine, gc: GraphicsContext) {
         var last = lastRobot
-        launchRobot(Direction.RIGHT, gc)
+        if(robots.size == 0){
+            robotBack(gc)
+            return
+        }
+        launchRobot(dir!!, gc)
         if(last!!.isLostConnection(lastRobot!!))
             lastRobot?.follow(last, gc)
     }
@@ -110,18 +121,19 @@ class Station(private val map: Map): Machine {
                 cur.back(gc)
                 cur = cur.nextRobot
             }
-            if(lastRobot?.path?.isEmpty() == true)
+            if(lastRobot?.path?.size == 1)
             {
+                var last = lastRobot
                 robots.add(lastRobot!!)
-                gc.fill = Color.WHITE
-                gc.fillRect(lastRobot!!.position.getX()!! * 10.0, lastRobot!!.position.getY()!! * 10.0, 10.0, 10.0)
+                //gc.fill = Color.WHITE
+                //gc.fillRect(lastRobot!!.position.getX()!! * 10.0, lastRobot!!.position.getY()!! * 10.0, 10.0, 10.0)
                 lastRobot = lastRobot?.nextRobot
+                last?.prevRobot = null
+                last?.nextRobot = null
+
             }
+            //sleep(100)
         }
-
-
-
-
     }
 }
 
