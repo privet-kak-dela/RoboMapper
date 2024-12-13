@@ -1,6 +1,8 @@
 package robot
 
 import javafx.scene.canvas.GraphicsContext
+import javafx.scene.control.Alert
+import javafx.scene.control.Alert.AlertType
 import javafx.scene.paint.Color
 import map.Map
 import kotlin.math.abs
@@ -66,11 +68,24 @@ class Station(private val map: Map): Machine {
         }
     }
 
+    private fun warningMessage(warn: String) {
+        var alert = Alert(AlertType.INFORMATION)
+        alert.title = "Предупреждение"
+        alert.headerText = null
+        alert.contentText = warn
+        alert.showAndWait()
+    }
+
     fun moveRobots(direction: Direction, gc: GraphicsContext) {
 
         var x = leadRobot!!.position.getX()!!
         var y = leadRobot!!.position.getY()!!
         // Перемещаем ведущего робота
+        if(isEncounter(direction)){
+            warningMessage("Осторожно! Столкновение!")
+            return
+        }
+
         when (direction) {
             Direction.UP -> leadRobot?.moveUp()
             Direction.DOWN -> leadRobot?.moveDown()
@@ -98,6 +113,29 @@ class Station(private val map: Map): Machine {
         val dx = abs(position.getX()!! - (other as Robot).position.getX()!!)
         val dy = abs(position.getY()!! - (other as Robot).position.getY()!!)
         return !(dx < signalRange && dy == 0 || dy < signalRange && dx == 0)
+    }
+
+    fun isEncounter(direction: Direction): Boolean
+    {
+        var cur = leadRobot?.prevRobot
+
+        while(cur is Robot) {
+            var x = leadRobot?.position?.getX()!!
+            var y = leadRobot?.position?.getY()!!
+            if(direction == Direction.DOWN)
+                y += 1
+            else if(direction == Direction.UP)
+                y -= 1
+            else if(direction == Direction.LEFT)
+                x -= 1
+            else if(direction == Direction.RIGHT)
+                x += 1
+
+             if(cur.position.getX()!! == x && cur.position.getY()!! == y)
+                 return true
+            cur = cur.prevRobot
+        }
+        return false
     }
 
     fun robotBack(gc: GraphicsContext)
