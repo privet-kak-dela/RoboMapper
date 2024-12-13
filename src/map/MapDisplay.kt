@@ -476,7 +476,7 @@ class MapDisplay @JvmOverloads constructor(
             val result = alert.showAndWait()
             if (result.isPresent && result.get() == ButtonType.OK) {
                 map.clearAll()
-                //station?.robotBack(gc2)
+                station?.robotBack(gc2)
                 station = null
                 isStationExist = false
 
@@ -496,8 +496,6 @@ class MapDisplay @JvmOverloads constructor(
         val result = alert.showAndWait()
         if (result.isPresent && result.get() == ButtonType.OK) {
             station?.robotBack(gc)
-            station = null
-            isStationExist = false
             map.clearRobotPaths()
             hideMap(gc, canvas)
         }
