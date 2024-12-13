@@ -167,11 +167,16 @@ class Robot(private val map: Map): Machine
     {
         gc.fill = Color.WHITE
         gc.fillRect(position.getX()!! * 10.0, position.getY()!! * 10.0, 10.0, 10.0)
-        position.setX(path[path.size - 1].getX())
-        position.setY(path[path.size - 1].getY())
-        path.removeAt(path.size - 1)
+        if(path.size > 1) {
+            position.setX(path[path.size - 2].getX())
+            position.setY(path[path.size - 2].getY())
+            path.removeAt(path.size - 1)
 
-        drawRobot(gc)
+            if(path.size != 1)
+                drawRobot(gc)
+            return
+        }
+        path.removeAt(path.size - 1)
 
     }
 
