@@ -72,11 +72,13 @@ class MapDisplay @JvmOverloads constructor(
                 {
                     val alert = Alert(Alert.AlertType.CONFIRMATION)
                     alert.title = "Установка станции"
-                    alert.headerText = "Весь прогресс будет утерян. Вы уверены?"
+                    alert.headerText = "Вы уверены, что хотите переустановить станцию?"
 
                     val result = alert.showAndWait()
                     if (result.isPresent && result.get() == ButtonType.OK) {
-                        map.clearRobotPaths()
+                        //map.clearRobotPaths()
+                        station?.robotBack(graphicsContext2)
+
                         isSettingRobot = true
                         isStationExist = true
                         hideMap(canvas2.graphicsContext2D, canvas2)
@@ -95,6 +97,10 @@ class MapDisplay @JvmOverloads constructor(
         // Кнопка для установки робота в любое место по клику
         val returnRobots = Button("Вернуть роботов")
         returnRobots.setOnAction {
+            val alert2 = Alert(Alert.AlertType.CONFIRMATION)
+            alert2.title = "Возврат роботов"
+            alert2.headerText = "Роботы будут возвращены на станцию"
+            alert2.showAndWait()
             station?.robotBack(graphicsContext2)
 
         }
@@ -495,9 +501,13 @@ class MapDisplay @JvmOverloads constructor(
 
         val result = alert.showAndWait()
         if (result.isPresent && result.get() == ButtonType.OK) {
+            val alert2 = Alert(Alert.AlertType.CONFIRMATION)
+            alert2.title = "Возврат роботов"
+            alert2.headerText = "Роботы будут возвращены на станцию"
+            alert2.showAndWait()
             station?.robotBack(gc)
-            station = null
-            isStationExist = false
+            //station = null
+            //isStationExist = false
             map.clearRobotPaths()
             hideMap(gc, canvas)
         }

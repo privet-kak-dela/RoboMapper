@@ -8,6 +8,7 @@ import map.Map
 import java.lang.Thread.sleep
 import kotlin.math.abs
 import kotlin.math.sqrt
+import kotlin.random.Random
 
 class Station(private val map: Map): Machine {
 
@@ -24,7 +25,7 @@ class Station(private val map: Map): Machine {
         this.maxRobots = maxRobots!!
         this.signalRange = signalRange!!
         for (i in 0 until this.maxRobots) {
-            var robot = Robot(map, position.getX(), position.getY())
+            var robot = Robot(map, position.getX(), position.getY(), getRandomColor())
             robot.path.add(Position(position.getX(), position.getY()))
             robots.add(robot)
         }
@@ -111,9 +112,16 @@ class Station(private val map: Map): Machine {
 
     override fun follow(other: Machine, gc: GraphicsContext) {
         var last = lastRobot
-        if(robots.size == 0){
-            robotBack(gc)
-            return
+        if (last != null) {
+            if(robots.size == 0 && last.isLostConnection(this))
+            {
+                val alert2 = Alert(Alert.AlertType.CONFIRMATION)
+                alert2.title = "Возврат роботов"
+                alert2.headerText = "Связь потеряна. Роботы будут возвращены на станцию"
+                alert2.showAndWait()
+                robotBack(gc)
+                return
+            }
         }
         launchRobot(dir!!, gc)
         if(last!!.isLostConnection(lastRobot!!))
@@ -172,6 +180,25 @@ class Station(private val map: Map): Machine {
             }
             //sleep(100)
         }
+    }
+    private var lastColor: Color? = null  // Хранит последний сгенерированный цвет
+
+    private fun isBlackOrBlue(color: Color): Boolean {
+        // Проверяем, является ли цвет черным или синим
+        return color == Color.BLACK || (color.red == 0.0 && color.green == 0.0 && color.blue > 0.5)
+    }
+
+    private fun getRandomColor(): Color {
+        var newColor: Color
+        do {
+            val red = Random.nextDouble(0.1, 0.9)
+            val green = Random.nextDouble(0.1, 0.9)
+            val blue = Random.nextDouble(0.0, 0.5)
+            newColor = Color.color(red, green, blue)
+        } while (newColor == lastColor || isBlackOrBlue(newColor))
+
+        lastColor = newColor
+        return newColor
     }
 }
 

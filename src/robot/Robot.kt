@@ -20,9 +20,15 @@ class Robot(private val map: Map): Machine
         position.setX(x)
         position.setY(y)
     }
+    constructor(map: Map, x: Int?, y: Int?, color: Color): this(map) {
+        position.setX(x)
+        position.setY(y)
+        col = color
+    }
 
     var apparentDistance: Int = 10 //уровень сигнала(между роботами + расстояние видимости между роботом и стенкой)
     var position = Position(null,null); //Позиция робота(по умолчанию 0,0)
+    var col: Color? = null
 
 
 //    var robotCount: Int;
@@ -156,6 +162,7 @@ class Robot(private val map: Map): Machine
         path.add(Position(position.getX()!!, position.getY()!!))
 
         drawRobot(gc)
+
         if(isLostConnection(prevRobot!!)) {
             prevRobot?.follow(this, gc)
         }
@@ -202,13 +209,15 @@ class Robot(private val map: Map): Machine
         val x = position.getX()
         val y = position.getY()
         if (x != null && y != null) { // Проверка на null
-            gc.fill = Color.RED
+            gc.fill = col
             gc.fillRect(x * 10.0, y * 10.0, 10.0, 10.0)
         }
         else {
             println("Robot position is not initialized. Cannot draw.")
         }
     }
+
+
 
 
 
