@@ -10,11 +10,12 @@ class Main : Application() {
 
     override fun start(primaryStage: Stage) {
 
-        val map = Map(50, 100) // Создаем экземпляр класса Map
-
+        val map = Map(76, 150) // Создаем экземпляр класса Map
+        primaryStage.isMaximized = true;
         //primaryStage.isResizable = false
         val mapDisplay = MapDisplay(map)
         mapDisplay.start(primaryStage)
+
 
         //Проверка
 
