@@ -53,7 +53,7 @@ class Robot(private val map: Map): Machine
     }
 
 
-
+    var h: Int = 7
     var prevRobot: Machine? = null
     var nextRobot: Robot? = null
     var isLast: Boolean = false
@@ -210,7 +210,14 @@ class Robot(private val map: Map): Machine
         val y = position.getY()
         if (x != null && y != null) { // Проверка на null
             gc.fill = col
-            gc.fillRect(x * 10.0, y * 10.0, 10.0, 10.0)
+            //gc.fillRect(x * 10.0, y * 10.0, 10.0, 10.0)
+            val x0 = x - (h-1)/2
+            val y0 = y - (h-1)/2
+            for (i in 1..h){
+                for (j in 1..h) {
+                    gc.fillRect((x0+(h-1)/2-i-1) as Double, (y0+i-1) as Double, (i+i%2-1) as Double, 1.0)
+                }
+            }
         }
         else {
             println("Robot position is not initialized. Cannot draw.")
