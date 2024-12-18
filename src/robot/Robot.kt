@@ -4,9 +4,11 @@ import javafx.scene.canvas.GraphicsContext
 import javafx.scene.paint.Color
 //import jdk.nashorn.internal.runtime.regexp.joni.Config.log
 import map.Map
+import map.MapDisplay
 
 import javafx.scene.control.Alert
 import javafx.scene.control.Alert.AlertType
+import javafx.scene.shape.Polygon
 
 import java.lang.Thread.sleep
 import kotlin.math.abs
@@ -16,20 +18,23 @@ class Robot(private val map: Map): Machine
     constructor(map: Map, position: Position): this(map) {
         this.position = position
     }
-    constructor(map: Map, x: Int?, y: Int?): this(map) {
+    constructor(map: Map, x: Int?, y: Int?, robotHeightNew : Int): this(map) {
         position.setX(x)
         position.setY(y)
+        robotHeight = robotHeightNew
     }
-    constructor(map: Map, x: Int?, y: Int?, color: Color): this(map) {
+    constructor(map: Map, x: Int?, y: Int?, color: Color, robotHeightNew : Int): this(map) {
         position.setX(x)
         position.setY(y)
         col = color
+        robotHeight = robotHeightNew
     }
 
     var apparentDistance: Int = 10 //уровень сигнала(между роботами + расстояние видимости между роботом и стенкой)
     var position = Position(null,null); //Позиция робота(по умолчанию 0,0)
     var col: Color? = null
-
+    var lastPressedButton : Char = 'w'
+    var robotHeight: Int = 10
 
 //    var robotCount: Int;
 //    // при запуске нового
@@ -67,7 +72,7 @@ class Robot(private val map: Map): Machine
         if (position.getX() != null && position.getX()!! + 1 < map.width && map.getCell(position.getX()!! + 1, position.getY()!!) == 0) {
             position.setX(position.getX()!! + 1);
             path.add(Position(position.getX()!!, position.getY()!!));
-
+            lastPressedButton = 'D'
         }
         else {
             warningMessage("Осторожно! Столкновение!")
@@ -79,7 +84,7 @@ class Robot(private val map: Map): Machine
         if (position.getX() != null && position.getX()!! - 1 >= 0 && map.getCell(position.getX()!! - 1, position.getY()!!) == 0) {
             position.setX(position.getX()!! - 1)
             path.add(Position(position.getX()!!, position.getY()!!));
-
+            lastPressedButton = 'A'
         }
         else {
             warningMessage("Осторожно! Столкновение!")
@@ -91,6 +96,7 @@ class Robot(private val map: Map): Machine
         if (position.getY() != null && position.getY()!! - 1 >= 0 && map.getCell(position.getX()!!, position.getY()!! - 1) == 0) {
             position.setY(position.getY()!! - 1)
             path.add(Position(position.getX()!!, position.getY()!!));
+            lastPressedButton = 'W'
         } else {
                 warningMessage("Осторожно! Столкновение!")
             }
@@ -103,6 +109,7 @@ class Robot(private val map: Map): Machine
         if (position.getY() != null && position.getY()!! + 1 < map.height && map.getCell(position.getX()!!, position.getY()!! + 1) == 0) {
             position.setY(position.getY()!! + 1)
             path.add(Position(position.getX()!!, position.getY()!!));
+            lastPressedButton = 'S'
         }
         else
         {
@@ -210,16 +217,63 @@ class Robot(private val map: Map): Machine
         val y = position.getY()
         if (x != null && y != null) { // Проверка на null
             gc.fill = col
-            gc.fillRect(x * 10.0, y * 10.0, 10.0, 10.0)
+            //gc.fillRect(x * 10.0, y * 10.0, 10.0, 10.0)
+
+            //Массивы точек треугольника
+            val xArray = DoubleArray(3)
+            val yArray = DoubleArray(3)
+
+            if (robotHeight % 2 != 0)
+            {
+                robotHeight += 1
+            }
+            val heightHalf : Double = robotHeight / 2.0
+
+            if (lastPressedButton == 'D')
+            {
+                xArray[0] = x * 10 + heightHalf
+                xArray[1] = x * 10 - heightHalf
+                xArray[2] = x * 10 - heightHalf
+
+                yArray[0] = y * 10 + 0.0
+                yArray[1] = y * 10 + heightHalf
+                yArray[2] = y * 10 - heightHalf
+            }
+            else if (lastPressedButton == 'W')
+            {
+                xArray[0] = x * 10 + 0.0
+                xArray[1] = x * 10 + heightHalf
+                xArray[2] = x * 10 - heightHalf
+
+                yArray[0] = y * 10 - heightHalf
+                yArray[1] = y * 10 + heightHalf
+                yArray[2] = y * 10 + heightHalf
+            }
+            else if (lastPressedButton == 'A')
+            {
+                xArray[0] = x * 10 - heightHalf
+                xArray[1] = x * 10 + heightHalf
+                xArray[2] = x * 10 + heightHalf
+
+                yArray[0] = y * 10 + 0.0
+                yArray[1] = y * 10 + heightHalf
+                yArray[2] = y * 10 - heightHalf
+            }
+            else if (lastPressedButton == 'S')
+            {
+                xArray[0] = x * 10 + 0.0
+                xArray[1] = x * 10 + heightHalf
+                xArray[2] = x * 10 - heightHalf
+
+                yArray[0] = y * 10 + heightHalf
+                yArray[1] = y * 10 - heightHalf
+                yArray[2] = y * 10 - heightHalf
+            }
+            gc.fillPolygon(xArray, yArray, 3)
+
         }
         else {
             println("Robot position is not initialized. Cannot draw.")
         }
     }
-
-
-
-
-
-
 }

@@ -19,13 +19,13 @@ class Station(private val map: Map): Machine {
     var position = Position(null,null);
     val robots = mutableListOf<Robot>()
 
-    constructor(map: Map, x: Int?, y: Int?, maxRobots: Int?, signalRange: Int?): this(map) {
+    constructor(map: Map, x: Int?, y: Int?, maxRobots: Int?, signalRange: Int? , robotHeight: Int): this(map) {
         position.setX(x)
         position.setY(y)
         this.maxRobots = maxRobots!!
         this.signalRange = signalRange!!
         for (i in 0 until this.maxRobots) {
-            var robot = Robot(map, position.getX(), position.getY(), getRandomColor())
+            var robot = Robot(map, position.getX(), position.getY(), getRandomColor(), robotHeight)
             robot.path.add(Position(position.getX(), position.getY()))
             robots.add(robot)
         }
@@ -69,10 +69,15 @@ class Station(private val map: Map): Machine {
 
     fun drawRobots(gc: GraphicsContext) {
         var cur: Machine? = leadRobot
+
         while(cur is Robot){
-           if(cur.position.getX() != position.getX() || cur.position.getY() != position.getY())
+            if(cur.position.getX() != position.getX() || cur.position.getY() != position.getY())
+            {
                 cur.drawRobot(gc)
+            }
+
             cur = cur.prevRobot
+
         }
     }
 
@@ -131,7 +136,7 @@ class Station(private val map: Map): Machine {
     override fun isLostConnection(other: Machine): Boolean {
         val dx = abs(position.getX()!! - (other as Robot).position.getX()!!)
         val dy = abs(position.getY()!! - (other as Robot).position.getY()!!)
-        return !(dx < signalRange && dy == 0 || dy < signalRange && dx == 0)
+        return !((dx < signalRange && dy == 0) || (dy < signalRange && dx == 0))
     }
 
     fun isEncounter(direction: Direction): Boolean

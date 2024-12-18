@@ -25,7 +25,6 @@ import java.io.File
 import kotlin.math.abs
 import kotlin.math.sign
 
-
 class MapDisplay @JvmOverloads constructor(
     private val map: Map = Map(20, 20)) : Application() {
 
@@ -38,6 +37,7 @@ class MapDisplay @JvmOverloads constructor(
     private var isEditing = false // Флаг для режима редактирования карты
     private var maxRobots = 10
     private var signalRange = 10
+    private var robotHeight = 10
 
     companion object {
         var canvas = Canvas()
@@ -208,7 +208,7 @@ class MapDisplay @JvmOverloads constructor(
                 }
                 drawMap(graphicsContext, drawingPart)
                 hideMap(graphicsContext2, scanningPart)
-                //station?.drawRobots(graphicsContext2)
+                station?.drawRobots(graphicsContext2)
             }
 
             //robot.radar()
@@ -266,7 +266,7 @@ class MapDisplay @JvmOverloads constructor(
             val y = (event.y / canvasSizeD).toInt()
 
             if (x in 0 until map.width && y in 0 until map.height && map.getCell(x,y) == 0) {
-                station = Station(map, x, y, maxRobots, signalRange)
+                station = Station(map, x, y, maxRobots, signalRange, robotHeight)
                 isSettingRobot = false
                 hideMap(graphicsContext, canvas) // Рисуем станцию и роботов
             }
@@ -436,7 +436,7 @@ class MapDisplay @JvmOverloads constructor(
 //        }
         // Рисуем станцию, если она установлена
         station?.drawStation(graphicsContext)
-        station?.drawRobots(graphicsContext)
+        //station?.drawRobots(graphicsContext)
 
         //Для отрисовки роботовв дальнейшем
         /*// Рисуем роботов, если станция установлена
@@ -535,10 +535,10 @@ class MapDisplay @JvmOverloads constructor(
     //--Проверка, что введеные значения - числа
     //--Если числа - записывает их в параметры
     //--Если нет - выводит сообщение о неправильности данных и возвращает false
-    private fun infoValidation(message:String , message2:String, stage: Stage ) : Boolean
+    private fun infoValidation(message:String , message2:String, message3:String, stage: Stage  ) : Boolean
     {
         try {
-            maxRobots = Integer.parseInt(message2) //Поменять на параметр
+            maxRobots = Integer.parseInt(message2)
         }catch ( e : NumberFormatException)
         {
             showWrongInputMessage(message2 + " не является числом")
@@ -546,19 +546,27 @@ class MapDisplay @JvmOverloads constructor(
         }
 
         try {
-            signalRange = Integer.parseInt(message)+1 //Поменять на параметр
-            stage.close()
-            return true
+            signalRange = Integer.parseInt(message)+1
         }catch ( e : NumberFormatException)
         {
             showWrongInputMessage(message + "не является числом")
             //Вернуть первому параметру старое значение?
             return false
         }
+        try {
+            robotHeight =  Integer.parseInt(message3)
+            stage.close()
+            return true
+        }catch ( e : NumberFormatException)
+        {
+            showWrongInputMessage(message3 + "не является числом")
+            //Вернуть первому параметру старое значение?
+            return false
+        }
     }
 
 
-    //Отображает окно для ввода количества роботов и уровня сигнала
+    //Отображает окно для ввода количества роботов, уровня сигнала и высоты робота
     private fun displayInputWindow()
     {
         val inputWindow = Stage();
@@ -579,24 +587,34 @@ class MapDisplay @JvmOverloads constructor(
         val signalLevelLabel = Label("Введите количество роботов")
         GridPane.setConstraints(signalLevelLabel, 0, 2);
 
-
         val signalLevelInput = TextField()
         GridPane.setConstraints(signalLevelInput, 0, 3);
 
+        val robotHeightLabel = Label("Введите высоту робота")
+        GridPane.setConstraints(robotHeightLabel, 0, 4)
+
+        val robotHeightInput = TextField()
+        GridPane.setConstraints(robotHeightInput, 0, 5);
+
+
         val okButton = Button("Ok")
-        okButton.setOnAction { e -> infoValidation(robotCountInput.text, signalLevelInput.text, inputWindow) }
+        okButton.setOnAction { e -> infoValidation(robotCountInput.text, signalLevelInput.text, robotHeightInput.text, inputWindow) }
 
         val layout = VBox(10.0);
         layout.children.addAll(okButton)
         layout.alignment = Pos.CENTER
-        GridPane.setConstraints(layout, 0, 4);
+        GridPane.setConstraints(layout, 0, 6);
 
-        grid.children.addAll(robotCountLabel, robotCountInput, signalLevelLabel, signalLevelInput, layout)
+        grid.children.addAll(robotCountLabel, robotCountInput, signalLevelLabel, signalLevelInput, robotHeightLabel, robotHeightInput, layout)
 
 
-        val inputScene = Scene(grid, 300.0, 200.0);
+        val inputScene = Scene(grid, 300.0, 230.0);
         inputWindow.scene = inputScene;
         inputWindow.showAndWait()
     }
 
+    fun getHeight() : Int
+    {
+        return robotHeight
+    }
 }

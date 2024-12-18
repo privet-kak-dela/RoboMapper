@@ -7,7 +7,6 @@ import map.MapDisplay
 
 
 class Main : Application() {
-
     override fun start(primaryStage: Stage) {
 
         val map = Map(76, 150) // Создаем экземпляр класса Map
@@ -16,9 +15,7 @@ class Main : Application() {
         val mapDisplay = MapDisplay(map)
         mapDisplay.start(primaryStage)
 
-
         //Проверка
-
 
     }
 }
