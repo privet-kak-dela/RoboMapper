@@ -1,13 +1,11 @@
 package map
 import javafx.embed.swing.SwingFXUtils
 import java.io.File
-import javafx.scene.canvas.Canvas
 import javafx.scene.image.WritableImage
 import javax.imageio.ImageIO
 import javafx.scene.image.Image
 import javafx.scene.image.PixelReader
 import javafx.scene.paint.Color
-import javax.swing.plaf.synth.ColorType
 
 
 class Map(var height: Int, var width: Int) {
@@ -64,9 +62,14 @@ class Map(var height: Int, var width: Int) {
             grid[y][x] = value
     }
     // Метод для сохранения карты в PNG
-    fun saveMapAsPng(canvas: Canvas, filePath: String) {
-        val writableImage = WritableImage(canvas.width.toInt(), canvas.height.toInt())
-        canvas.snapshot(null, writableImage)
+    fun saveMapAsPng(filePath: String) {
+        val writableImage = WritableImage(grid[0].size, grid.size)
+        for(y in grid.indices){
+            for(x in grid[0].indices) {
+                val color = if (grid[y][x] == 1) Color.BLACK else Color.WHITE
+                writableImage.pixelWriter.setColor(x, y, color)
+            }
+        }
         val bufferedImage = SwingFXUtils.fromFXImage(writableImage, null)
         ImageIO.write(bufferedImage, "png", File(filePath))
     }
@@ -74,8 +77,8 @@ class Map(var height: Int, var width: Int) {
     // Метод для сохранения карты в CSV
     fun saveMapAsCsv(filePath: String) {
         val csvData = StringBuilder()
-        for (y in 0 until height) {
-            for (x in 0 until width) {
+        for (y in grid.indices) {
+            for (x in grid[0].indices) {
                 csvData.append(if (getCell(x, y) != 0)  "1" else "0") // Преобразуем ячейку в "1" или "0"
                 if (x < width - 1) csvData.append(",")
             }
@@ -86,38 +89,50 @@ class Map(var height: Int, var width: Int) {
 
     // Загрузки карты из PNG
     fun loadMapFromPng(filePath: String) {
+        //clearMap()
         val file = File(filePath)
         if (file.exists()) {
             // Загружаем изображение
             val image = Image(file.toURI().toString())
+            expandWidth(image.width.toInt())
+            expandHeight(image.height.toInt())
+            MapDisplay.canvas.width = width * 10.0
+            MapDisplay.canvas.height = height * 10.0
+            MapDisplay.canvas2.width = width * 10.0
+            MapDisplay.canvas2.height = height * 10.0
             val pixelReader: PixelReader = image.pixelReader
             for (y in 0 until height) {
                 for (x in 0 until width) {
-                    val color: Color = pixelReader.getColor(x*10, y*10)
-                    println(color)
-                    if(color.red == 1.0)
+                    val color: Color = pixelReader.getColor(x, y)
+                    if(color == Color.WHITE)
                         continue
                     updateMap(x, y, 1)
                 }
             }
-            println(grid)
         } else {
             println("Файл не найден: $filePath")
         }
     }
 
     fun loadMapFromCSV(filename: String) {
+        //clearMap()
         val file = File(filename)
-        var y = 0;
+        var y = 0
         if(file.exists()){
-           file.forEachLine {line ->
-               val values = line.split(",")
-               for(i in values.indices){
-                   updateMap(i, y, values[i].toInt())
-               }
-               y++
-           }
-
+            val lines = file.readLines()
+            expandWidth(lines[0].length)
+            expandHeight(lines.size)
+            MapDisplay.canvas.width = width * 10.0
+            MapDisplay.canvas.height = height * 10.0
+            MapDisplay.canvas2.width = width * 10.0
+            MapDisplay.canvas2.height = height * 10.0
+            for (line in lines) {
+                val values = line.split(",")
+                for(i in values.indices){
+                    updateMap(i, y, values[i].toInt())
+                }
+                y++
+            }
         }
         else{
             println("Файл не найден: $filename")
