@@ -11,58 +11,42 @@ import javafx.scene.control.Alert.AlertType
 import java.lang.Thread.sleep
 import kotlin.math.abs
 
-class Robot(private val map: Map): Machine
-{
-    constructor(map: Map, position: Position): this(map) {
-        this.position = position
-    }
-    constructor(map: Map, x: Int?, y: Int?): this(map) {
-        position.setX(x)
-        position.setY(y)
-    }
-    constructor(map: Map, x: Int?, y: Int?, color: Color): this(map) {
-        position.setX(x)
-        position.setY(y)
-        col = color
-    }
-
-    var apparentDistance: Int = 10 //уровень сигнала(между роботами + расстояние видимости между роботом и стенкой)
-    var position = Position(null,null); //Позиция робота(по умолчанию 0,0)
+class Robot(private val map: Map): Machine {
+    var robotSize: Int = 7 // Размер робота по умолчанию (нечетное число)
+    var apparentDistance: Int = 10 // Дальность сигнала и дальность видимости
+    var position = Position(null, null)
     var col: Color? = null
-
-
-//    var robotCount: Int;
-//    // при запуске нового
-//    if (!robotCount) {
-//        warningMessage("Роботы кончились!")
-//    }
-//    else {
-//        robotCount--
-//    }
-
-    //var path: Array<>
-
-    ///////временные поля!!!!!!!!! (удалить после создания станции)
-
-    private fun warningMessage(warn: String) {
-        var alert = Alert(AlertType.INFORMATION)
-        alert.title = "Предупреждение"
-        alert.headerText = null
-        alert.contentText = warn
-        alert.showAndWait()
-    }
-
-
-
     var prevRobot: Machine? = null
     var nextRobot: Robot? = null
     var isLast: Boolean = false
     var isLead: Boolean = false
-
     var path: MutableList<Position> = mutableListOf()
+    var direction: Direction = Direction.UP // Начальное направление
 
 
-    public fun moveRight()
+    // Constructors (adapted for robotSize)
+    constructor(map: Map, position: Position, robotSize: Int = 7) : this(map) {
+        this.position = position
+        this.robotSize = robotSize
+    }
+
+    constructor(map: Map, x: Int?, y: Int?, robotSize: Int = 7) : this(map) {
+        position.setX(x)
+        position.setY(y)
+        this.robotSize = robotSize
+    }
+
+    constructor(map: Map, x: Int?, y: Int?, color: Color, robotSize: Int = 7) : this(map) {
+        position.setX(x)
+        position.setY(y)
+        col = color
+        this.robotSize = robotSize
+    }
+
+
+
+
+    fun moveRight()
     {
         if (position.getX() != null && position.getX()!! + 1 < map.width && map.getCell(position.getX()!! + 1, position.getY()!!) == 0) {
             position.setX(position.getX()!! + 1);
@@ -73,7 +57,7 @@ class Robot(private val map: Map): Machine
             warningMessage("Осторожно! Столкновение!")
         }
     }
-    public fun moveLeft()
+    fun moveLeft()
     {
 
         if (position.getX() != null && position.getX()!! - 1 >= 0 && map.getCell(position.getX()!! - 1, position.getY()!!) == 0) {
@@ -208,18 +192,42 @@ class Robot(private val map: Map): Machine
     fun drawRobot(gc: GraphicsContext) {
         val x = position.getX()
         val y = position.getY()
-        if (x != null && y != null) { // Проверка на null
+        if (x != null && y != null && col != null) {
             gc.fill = col
-            gc.fillRect(x * 10.0, y * 10.0, 10.0, 10.0)
-        }
-        else {
-            println("Robot position is not initialized. Cannot draw.")
+            val halfSize = (robotSize - 1) / 2
+
+            when (direction) {
+                Direction.UP -> drawTriangle(gc, x, y, halfSize, true)
+                Direction.DOWN -> drawTriangle(gc, x, y, halfSize, false)
+                Direction.LEFT -> drawTriangle(gc, x, y, halfSize, true, true) // Rotated left
+                Direction.RIGHT -> drawTriangle(gc, x, y, halfSize, false, true) // Rotated Right
+            }
+        } else {
+            println("Robot position or color is not initialized. Cannot draw.")
         }
     }
 
+    private fun drawTriangle(gc: GraphicsContext, x: Int, y: Int, halfSize: Int, isUp: Boolean, isRotated: Boolean = false) {
+        for (i in 0..halfSize) {
+            val width = 2 * i + 1
+            for (j in 0 until width) {
+                val currentX = if (isRotated) y + halfSize - i + j else x + halfSize - i + j
+                val currentY = if (isRotated) x + if (isUp) i else -i else y + if (isUp) -i else i
 
+                if (currentX in 0 until map.width && currentY in 0 until map.height) {
+                    gc.fillRect(currentX * 10.0, currentY * 10.0, 10.0, 10.0)
+                }
+            }
+        }
+    }
 
-
+    private fun warningMessage(warn: String) {
+        val alert = Alert(AlertType.INFORMATION)
+        alert.title = "Warning"
+        alert.headerText = null
+        alert.contentText = warn
+        alert.showAndWait()
+    }
 
 
 }

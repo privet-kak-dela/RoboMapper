@@ -85,6 +85,12 @@ class Station(private val map: Map): Machine {
     }
 
     fun moveRobots(direction: Direction, gc: GraphicsContext) {
+        if (leadRobot == null) {
+            // Обработка случая, когда ведущего робота ещё нет
+            // Можно выйти из функции, показать сообщение или запустить робота.
+            warningMessage("Роботы ещё не запущены.") // Или запустить робота
+            return
+        }
 
         var x = leadRobot!!.position.getX()!!
         var y = leadRobot!!.position.getY()!!

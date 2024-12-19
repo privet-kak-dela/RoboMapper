@@ -23,5 +23,4 @@ class Main : Application() {
 }
 fun main() {
     Application.launch(Main::class.java)
-
 }

@@ -38,6 +38,7 @@ class MapDisplay @JvmOverloads constructor(
     private var isEditing = false // Флаг для режима редактирования карты
     private var maxRobots = 10
     private var signalRange = 10
+    private var robotSize = 7
 
     companion object {
         var canvas = Canvas()
@@ -46,76 +47,65 @@ class MapDisplay @JvmOverloads constructor(
     private var station: Station? = null
 
     override fun start(primaryStage: Stage) {
-        val drawingPart = Canvas(map.width * canvasSizeD, map.height * canvasSizeD)
-        val scanningPart= Canvas(map.width * canvasSizeD, map.height * canvasSizeD)
-        val graphicsContext = drawingPart.graphicsContext2D
-        val graphicsContext2 = scanningPart.graphicsContext2D
 
-        var startCoordinates = doubleArrayOf(0.0, 0.0)
 
-        // Отображение карты
-        drawMap(graphicsContext, canvas)
-        hideMap(graphicsContext2, canvas2)
+        displayRobotSizeInputWindow(primaryStage)
 
-        // Кнопка для установки робота в любое место по клику
+
+        canvas = Canvas(map.width * canvasSizeD, map.height * canvasSizeD)
+        canvas2 = Canvas(map.width * canvasSizeD, map.height * canvasSizeD)
+        val gc = canvas.graphicsContext2D
+        val gc2 = canvas2.graphicsContext2D
+
+        val startCoordinates = doubleArrayOf(0.0, 0.0)
+
+        drawMap(gc, canvas)
+        hideMap(gc2, canvas2)
+
         val setRobotButton = Button("Установить станцию")
         setRobotButton.setOnAction {
-            if(!isEditing)
-            {
-                if(!isStationExist)
-                {
+            if (!isEditing) {
+                if (!isStationExist) {
                     isSettingRobot = true
                     isStationExist = true
-                    displayInputWindow();
-                }
-                else
-                {
+                    displayInputWindow(primaryStage)  // Передаем primaryStage в displayInputWindow
+                } else {
                     val alert = Alert(Alert.AlertType.CONFIRMATION)
                     alert.title = "Установка станции"
                     alert.headerText = "Вы уверены, что хотите переустановить станцию?"
 
                     val result = alert.showAndWait()
                     if (result.isPresent && result.get() == ButtonType.OK) {
-                        //map.clearRobotPaths()
-                        station?.robotBack(graphicsContext2)
-
+                        station?.robotBack(gc2)
                         isSettingRobot = true
-                        isStationExist = true
-                        hideMap(canvas2.graphicsContext2D, canvas2)
+                        hideMap(gc2, canvas2)
                     }
                 }
-            }
-            //hideMap(graphicsContext, canvas)
-            else
-            {
+            } else {
                 val alert = Alert(Alert.AlertType.CONFIRMATION)
                 alert.title = "Ошибка установки станции"
                 alert.headerText = "Подтвердите карту"
                 alert.showAndWait()
             }
         }
-        // Кнопка для установки робота в любое место по клику
+
+
         val returnRobots = Button("Вернуть роботов")
         returnRobots.setOnAction {
-            val alert2 = Alert(Alert.AlertType.CONFIRMATION)
-            alert2.title = "Возврат роботов"
-            alert2.headerText = "Роботы будут возвращены на станцию"
-            alert2.showAndWait()
-            station?.robotBack(graphicsContext2)
+            val alert = Alert(Alert.AlertType.CONFIRMATION)
+            alert.title = "Возврат роботов"
+            alert.headerText = "Роботы будут возвращены на станцию"
+            alert.showAndWait()
+            station?.robotBack(gc2)
 
         }
 
-        // Создаем кнопку "Сохранить"
-        val saveButton = createSaveButton(primaryStage, drawingPart)
+        val saveButton = createSaveButton(primaryStage, canvas)
+        val loadButton = createLoadButton(primaryStage, canvas)
 
-        // Создаем кнопку "Загрузить"
-        val loadButton = createLoadButton(primaryStage, drawingPart)
-
-        // Кнопка "Редактировать"
         val editButton = ToggleButton("Нарисовать карту")
         editButton.setOnAction {
-            if(isStationExist)
-            {
+            if (isStationExist) {
                 val alert = Alert(Alert.AlertType.CONFIRMATION)
                 alert.title = "Редактирование карты"
                 alert.headerText = "Весь прогресс будет утерян. Вы уверены?"
@@ -124,122 +114,75 @@ class MapDisplay @JvmOverloads constructor(
                 if (result.isPresent && result.get() == ButtonType.OK) {
                     map.clearRobotPaths()
                     station = null
-                    //robot.position.setX(null)
-                    //robot.position.setY(null)
                     isStationExist = false
-                    drawMap(canvas.graphicsContext2D, canvas)
-                    hideMap(canvas2.graphicsContext2D, canvas2)
-                    isEditing = editButton.isSelected
-                    editButton.text = if (isEditing) "Подтвердить" else "Редактировать"
-                    canvas.isDisable = !isEditing // Отключаем/включаем взаимодействие с картой
+                    drawMap(gc, canvas)
+                    hideMap(gc2, canvas2)
                 }
             }
-            else
-            {
-                isEditing = editButton.isSelected
-                editButton.text = if (isEditing) "Подтвердить" else "Редактировать"
-                canvas.isDisable = !isEditing // Отключаем/включаем взаимодействие с картой
-            }
-
+            isEditing = editButton.isSelected
+            editButton.text = if (isEditing) "Подтвердить" else "Нарисовать карту"
+            canvas.isDisable = !isEditing
         }
 
 
-        // Создаем кнопку "Очистить карту"
-        val clearAllButton = createClearAllButton(graphicsContext, drawingPart, graphicsContext2, scanningPart)
 
-        // Создаем кнопку "Очистить следы робота"
+        val clearAllButton = createClearAllButton(gc, canvas, gc2, canvas2)
+
+
         val clearRobotPathsButton = Button("Очистить исследованную территорию").apply {
-            setOnAction { handleClearRobotPaths(map, scanningPart, graphicsContext2) }
+            setOnAction { handleClearRobotPaths(map, canvas2, gc2) }
 
         }
 
-//        val confirmButton = Button("Подтвердить")
-//        confirmButton.setOnAction {
-//            isEditing = false
-//            editButton.isSelected = false
-//            editButton.text = "Редактировать"
-//            canvas.isDisable = true // Полностью отключаем редактирование карты
-//        }
 
-        val menuBar = HBox(10.0, saveButton, loadButton,editButton,clearAllButton,clearRobotPathsButton, setRobotButton, returnRobots)
+        val menuBar = HBox(10.0, saveButton, loadButton, editButton, clearAllButton, clearRobotPathsButton, setRobotButton, returnRobots)
 
-        val scrollPane = ScrollPane()
-        scrollPane.content = drawingPart
+        val scrollPane = ScrollPane(canvas)
+        val scrollPane2 = ScrollPane(canvas2)
 
-        val scrollPane2 = ScrollPane()
-        scrollPane2.content = scanningPart
-
-        val splitPane = SplitPane()
-        splitPane.items.addAll(scrollPane, scrollPane2)
+        val splitPane = SplitPane(scrollPane, scrollPane2)
         splitPane.setDividerPositions(0.5)
-        splitPane.dividers[0].positionProperty().addListener { observable, _, _ ->
-            splitPane.setDividerPositions(0.5)
-        }
+
 
         val root = VBox(menuBar, splitPane)
         root.spacing = 10.0
-        scrollPane.prefWidthProperty().bind(root.widthProperty())
-        scrollPane.prefHeightProperty().bind(root.heightProperty())
+        root.padding = Insets(10.0)  // Add padding to the root
 
-        // Устанавливаем сцену и отображаем окно
-        primaryStage.scene = Scene(root, map.width * canvasSizeD, map.height * canvasSizeD + 40)
+
+        scrollPane.prefWidthProperty().bind(root.widthProperty())
+        scrollPane.prefHeightProperty().bind(root.heightProperty().subtract(menuBar.heightProperty()).subtract(root.spacing))
+        scrollPane2.prefWidthProperty().bind(root.widthProperty())
+        scrollPane2.prefHeightProperty().bind(root.heightProperty().subtract(menuBar.heightProperty()).subtract(root.spacing))
+
+
+        primaryStage.scene = Scene(root)
         primaryStage.title = "Map Display"
-        primaryStage.show()
+
+
+        canvas.setOnMousePressed { event -> handleMousePressed(event, gc, canvas, startCoordinates) }
+        canvas2.setOnMousePressed { event -> handleMousePressedSetRobotPosition(event, gc2, canvas2, startCoordinates) }
+        canvas.setOnMouseDragged { event -> handleMouseDragged(event, gc, gc2, canvas, canvas2, startCoordinates) }
+
 
         primaryStage.scene.setOnKeyPressed { event ->
-            if(station != null) {
-                if(station?.maxRobots != station?.robots?.size) {
-                    when (event.code) {
-                        KeyCode.W -> station?.moveRobots(Direction.UP, graphicsContext2)
-                        KeyCode.S -> station?.moveRobots(Direction.DOWN, graphicsContext2)
-                        KeyCode.A -> station?.moveRobots(Direction.LEFT, graphicsContext2)
-                        KeyCode.D -> station?.moveRobots(Direction.RIGHT, graphicsContext2)
-                        else -> {}
-                    }
+            if (station != null) {
+
+                when (event.code) {
+                    KeyCode.W -> station?.moveRobots(Direction.UP, gc2)
+                    KeyCode.S -> station?.moveRobots(Direction.DOWN, gc2)
+                    KeyCode.A -> station?.moveRobots(Direction.LEFT, gc2)
+                    KeyCode.D -> station?.moveRobots(Direction.RIGHT, gc2)
+
+
+                    else -> {}
                 }
-                else{
-                    when (event.code) {
-                        KeyCode.W -> station?.launchRobot(Direction.UP, graphicsContext2)
-                        KeyCode.S -> station?.launchRobot(Direction.DOWN, graphicsContext2)
-                        KeyCode.A -> station?.launchRobot(Direction.LEFT, graphicsContext2)
-                        KeyCode.D -> station?.launchRobot(Direction.RIGHT, graphicsContext2)
-                        else -> {}
-                    }
-                }
-                drawMap(graphicsContext, drawingPart)
-                hideMap(graphicsContext2, scanningPart)
-                //station?.drawRobots(graphicsContext2)
+                drawMap(gc, canvas)
+                hideMap(gc2, canvas2)
             }
-
-            //robot.radar()
-            //drawMap(graphicsContext, canvas)
-            //hideMap(graphicsContext2, canvas2)
-
-
-           //if(robot.position.getX() != null)
-                //robot.radar()
-           // drawMap(graphicsContext, drawingPart)
-            //hideMap(graphicsContext2, scanningPart)
-            //dynamicText.set(countPercentOfExploredCells())
-
         }
+        primaryStage.show()
 
-
-
-        // Отслеживаем изменение размеров ScrollPane и увеличиваем карту
-        scrollPane.widthProperty().addListener { _, _, newWidth ->
-            adjustMapWidth(graphicsContext, graphicsContext2, drawingPart, scanningPart, newWidth.toDouble())
-        }
-        scrollPane.heightProperty().addListener { _, _, newHeight ->
-            adjustMapHeight(graphicsContext, drawingPart, newHeight.toDouble())
-        }
-
-        drawingPart.setOnMousePressed { event -> handleMousePressed(event, graphicsContext, drawingPart, startCoordinates) }
-        scanningPart.setOnMousePressed { event -> handleMousePressedSetRobotPosition(event, graphicsContext2, scanningPart, startCoordinates) }
-        drawingPart.setOnMouseDragged { event -> handleMouseDragged(event, graphicsContext, graphicsContext2, drawingPart, scanningPart, startCoordinates) }
     }
-
-    //
 
 
 
@@ -261,31 +204,42 @@ class MapDisplay @JvmOverloads constructor(
         startCoordinates[0] = event.x
         startCoordinates[1] = event.y
 
+
         if (isSettingRobot) {
             val x = (event.x / canvasSizeD).toInt()
             val y = (event.y / canvasSizeD).toInt()
 
-            if (x in 0 until map.width && y in 0 until map.height && map.getCell(x,y) == 0) {
+            if (x in 0 until map.width && y in 0 until map.height && map.getCell(x, y) == 0) {
+                // Get robot size from user
+                val dialog = TextInputDialog("7") // Default value
+                dialog.title = "Robot Size"
+                dialog.headerText = "Enter the robot size (odd number):"
+                dialog.contentText = "Size:"
+
+                val result = dialog.showAndWait()
+                val robotSize = if (result.isPresent) {
+                    val input = result.get().toIntOrNull()
+                    if (input != null && input % 2 != 0 && input > 0) {
+                        input // Use valid input
+                    } else {
+                        7 // Use default if input is invalid
+                    }
+                } else {
+                    7 // Use default if dialog is cancelled
+                }
+
+                //Creating a station
                 station = Station(map, x, y, maxRobots, signalRange)
+
+                // Set the size for each robot in the station
+                for (robot in station!!.robots) {
+                    robot.robotSize = robotSize
+                }
+
                 isSettingRobot = false
-                hideMap(graphicsContext, canvas) // Рисуем станцию и роботов
+                hideMap(graphicsContext, scanningPart)
             }
-
         }
-        //старый код
-        /*if (isSettingRobot) {
-            // Установка робота
-            setRobotPosition(event)
-            robot.radar()
-
-            hideMap(graphicsContext, canvas)
-
-        }
-
-            hideMap(graphicsContext, drawingPart)
-            dynamicText.set(countPercentOfExploredCells())
-        }*/
-
 
     }
 
@@ -559,10 +513,11 @@ class MapDisplay @JvmOverloads constructor(
 
 
     //Отображает окно для ввода количества роботов и уровня сигнала
-    private fun displayInputWindow()
+    private fun displayInputWindow(owner: Window)
     {
-        val inputWindow = Stage();
-        inputWindow.initModality(Modality.APPLICATION_MODAL);
+        val inputWindow = Stage()
+        inputWindow.initModality(Modality.APPLICATION_MODAL)
+        inputWindow.initOwner(owner)  // Set owner for modal behavior
         inputWindow.title = "Input Parameters"
 
         val grid = GridPane();
@@ -597,6 +552,41 @@ class MapDisplay @JvmOverloads constructor(
         val inputScene = Scene(grid, 300.0, 200.0);
         inputWindow.scene = inputScene;
         inputWindow.showAndWait()
+    }
+
+    private fun displayRobotSizeInputWindow(owner: Window) {
+        val inputWindow = Stage()
+        inputWindow.initModality(Modality.APPLICATION_MODAL)
+        inputWindow.initOwner(owner)
+        inputWindow.title = "Robot Size"
+
+        val label = Label("Enter the robot size (odd number):")
+        val inputField = TextField("7") // Default value
+        val okButton = Button("OK")
+
+        okButton.setOnAction {
+            val input = inputField.text.toIntOrNull()
+            if (input != null && input % 2 != 0 && input > 0) {
+                robotSize = input
+                // Update existing robots size, if any
+                station?.robots?.forEach { it.robotSize = robotSize }
+                inputWindow.close()
+            } else {
+                val alert = Alert(Alert.AlertType.ERROR)
+                alert.title = "Invalid Input"
+                alert.headerText = null
+                alert.contentText = "Please enter a valid odd number greater than 0."
+                alert.showAndWait()
+            }
+        }
+
+        val vbox = VBox(label, inputField, okButton)
+        vbox.padding = Insets(10.0)
+        vbox.spacing = 8.0
+
+        inputWindow.scene = Scene(vbox)
+        inputWindow.showAndWait()
+
     }
 
 }
