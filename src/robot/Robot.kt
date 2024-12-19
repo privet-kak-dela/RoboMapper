@@ -51,7 +51,7 @@ class Robot(private val map: Map): Machine {
         if (position.getX() != null && position.getX()!! + 1 < map.width && map.getCell(position.getX()!! + 1, position.getY()!!) == 0) {
             position.setX(position.getX()!! + 1);
             path.add(Position(position.getX()!!, position.getY()!!));
-
+            direction = Direction.RIGHT
         }
         else {
             warningMessage("Осторожно! Столкновение!")
@@ -63,7 +63,7 @@ class Robot(private val map: Map): Machine {
         if (position.getX() != null && position.getX()!! - 1 >= 0 && map.getCell(position.getX()!! - 1, position.getY()!!) == 0) {
             position.setX(position.getX()!! - 1)
             path.add(Position(position.getX()!!, position.getY()!!));
-
+            direction = Direction.LEFT
         }
         else {
             warningMessage("Осторожно! Столкновение!")
@@ -75,6 +75,7 @@ class Robot(private val map: Map): Machine {
         if (position.getY() != null && position.getY()!! - 1 >= 0 && map.getCell(position.getX()!!, position.getY()!! - 1) == 0) {
             position.setY(position.getY()!! - 1)
             path.add(Position(position.getX()!!, position.getY()!!));
+            direction = Direction.UP
         } else {
                 warningMessage("Осторожно! Столкновение!")
             }
@@ -87,6 +88,7 @@ class Robot(private val map: Map): Machine {
         if (position.getY() != null && position.getY()!! + 1 < map.height && map.getCell(position.getX()!!, position.getY()!! + 1) == 0) {
             position.setY(position.getY()!! + 1)
             path.add(Position(position.getX()!!, position.getY()!!));
+            direction = Direction.DOWN
         }
         else
         {
@@ -197,22 +199,27 @@ class Robot(private val map: Map): Machine {
             val halfSize = (robotSize - 1) / 2
 
             when (direction) {
-                Direction.UP -> drawTriangle(gc, x, y, halfSize, true)
-                Direction.DOWN -> drawTriangle(gc, x, y, halfSize, false)
-                Direction.LEFT -> drawTriangle(gc, x, y, halfSize, true, true) // Rotated left
-                Direction.RIGHT -> drawTriangle(gc, x, y, halfSize, false, true) // Rotated Right
+                Direction.UP -> drawTriangle(gc, x, y, halfSize, pointingUp = false)
+                Direction.DOWN -> drawTriangle(gc, x, y, halfSize, pointingUp = true)
+                Direction.LEFT -> drawTriangle(gc, x, y, halfSize, pointingUp = false, isRotated = true)
+                Direction.RIGHT -> drawTriangle(gc, x, y, halfSize, pointingUp = true, isRotated = true)
             }
         } else {
             println("Robot position or color is not initialized. Cannot draw.")
         }
     }
 
-    private fun drawTriangle(gc: GraphicsContext, x: Int, y: Int, halfSize: Int, isUp: Boolean, isRotated: Boolean = false) {
+    private fun drawTriangle(gc: GraphicsContext, x: Int, y: Int, halfSize: Int, pointingUp: Boolean, isRotated: Boolean = false) {
         for (i in 0..halfSize) {
             val width = 2 * i + 1
             for (j in 0 until width) {
-                val currentX = if (isRotated) y + halfSize - i + j else x + halfSize - i + j
-                val currentY = if (isRotated) x + if (isUp) i else -i else y + if (isUp) -i else i
+                val dx = halfSize - i + j
+                val dy = if (pointingUp) -i else i
+
+
+                val currentX = if (isRotated) x + dy else x + dx
+                val currentY = if (isRotated) y + dx else y + dy
+
 
                 if (currentX in 0 until map.width && currentY in 0 until map.height) {
                     gc.fillRect(currentX * 10.0, currentY * 10.0, 10.0, 10.0)

@@ -30,6 +30,18 @@ class Station(private val map: Map): Machine {
             robots.add(robot)
         }
     }
+    constructor(map: Map, x: Int?, y: Int?, maxRobots: Int?, signalRange: Int?, robotSize: Int) : this(map) {
+        position.setX(x)
+        position.setY(y)
+        this.maxRobots = maxRobots!!
+        this.signalRange = signalRange!!
+
+        for (i in 0 until this.maxRobots) {
+            val robot = Robot(map, position.getX(), position.getY(), getRandomColor(), robotSize)
+            robot.path.add(Position(position.getX(), position.getY()))
+            robots.add(robot)
+        }
+    }
 
     var dir: Direction? = null
 
@@ -85,12 +97,6 @@ class Station(private val map: Map): Machine {
     }
 
     fun moveRobots(direction: Direction, gc: GraphicsContext) {
-        if (leadRobot == null) {
-            // Обработка случая, когда ведущего робота ещё нет
-            // Можно выйти из функции, показать сообщение или запустить робота.
-            warningMessage("Роботы ещё не запущены.") // Или запустить робота
-            return
-        }
 
         var x = leadRobot!!.position.getX()!!
         var y = leadRobot!!.position.getY()!!
